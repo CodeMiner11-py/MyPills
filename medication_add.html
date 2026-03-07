@@ -110,6 +110,11 @@ textarea{resize:vertical;min-height:90px;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.error{background:#c0392b;}
 
+.time-fields{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.time-row{display:flex;align-items:center;gap:10px;}
+.time-row label{font-size:12px;color:#888;font-weight:500;white-space:nowrap;min-width:70px;margin:0;}
+.time-row input{flex:1;}
+
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(24px);}
   to{opacity:1;transform:translateY(0);}
@@ -155,15 +160,17 @@ textarea{resize:vertical;min-height:90px;}
     <div class="form-group">
       <label>Schedule</label>
       <div style="display:flex;gap:10px;align-items:center;">
-        <input type="number" id="scheduleCount" placeholder="e.g. 2" min="1" step="1" style="flex:1;">
+        <input type="number" id="scheduleCount" placeholder="e.g. 2" min="1" max="24" step="1" style="flex:1;" oninput="updateTimePickers()">
         <span style="font-size:13px;color:#888;white-space:nowrap;">time(s) per</span>
-        <select id="scheduleUnit" style="width:130px;">
+        <select id="scheduleUnit" style="width:130px;" onchange="updateTimePickers()">
+          <option value="HOURLY">Hour</option>
           <option value="DAILY" selected>Day</option>
           <option value="WEEKLY">Week</option>
           <option value="MONTHLY">Month</option>
           <option value="YEARLY">Year</option>
         </select>
       </div>
+      <div class="time-fields" id="timeFields"></div>
     </div>
 
     <div class="form-row">
@@ -196,7 +203,7 @@ textarea{resize:vertical;min-height:90px;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, Timestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -229,6 +236,51 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.className = "toast", 3000);
 }
 
+function updateTimePickers() {
+  const count = parseInt(document.getElementById("scheduleCount").value) || 0;
+  const unit = document.getElementById("scheduleUnit").value;
+  const container = document.getElementById("timeFields");
+  container.innerHTML = "";
+  if (count === 0) return;
+
+  const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  for (let i = 1; i <= count; i++) {
+    const row = document.createElement("div");
+    row.className = "time-row";
+
+    let inner = `<label>Dose ${i}</label>`;
+
+    if (unit === "HOURLY") {
+      inner += `<div style="display:flex;align-items:center;gap:8px;flex:1;">
+        <span style="font-size:13px;color:#888;">at :</span>
+        <input type="number" id="doseTime_${i}" min="0" max="59" placeholder="30" style="width:80px;" required>
+        <span style="font-size:13px;color:#888;">mins past the hour</span>
+      </div>`;
+    } else if (unit === "DAILY") {
+      inner += `<input type="time" id="doseTime_${i}" required style="flex:1;">`;
+    } else if (unit === "WEEKLY") {
+      const dayOpts = DAYS.map(d => `<option value="${d}">${d}</option>`).join("");
+      inner += `<select id="doseDay_${i}" style="flex:1;">${dayOpts}</select>
+                <input type="time" id="doseTime_${i}" required style="flex:1;">`;
+    } else if (unit === "MONTHLY") {
+      const dayNums = Array.from({length:31},(_,k)=>`<option value="${k+1}">${k+1}</option>`).join("");
+      inner += `<select id="doseDay_${i}" style="flex:1;">${dayNums}</select>
+                <input type="time" id="doseTime_${i}" required style="flex:1;">`;
+    } else if (unit === "YEARLY") {
+      const monthOpts = MONTHS.map((m,idx) => `<option value="${idx+1}">${m}</option>`).join("");
+      const dayNums = Array.from({length:31},(_,k)=>`<option value="${k+1}">${k+1}</option>`).join("");
+      inner += `<select id="doseMonth_${i}" style="flex:1;">${monthOpts}</select>
+                <select id="doseDay_${i}" style="flex:1;">${dayNums}</select>
+                <input type="time" id="doseTime_${i}" required style="flex:1;">`;
+    }
+
+    row.innerHTML = inner;
+    container.appendChild(row);
+  }
+}
+
 async function saveMedication() {
   const name          = document.getElementById("name").value.trim();
   const dosageValue   = document.getElementById("dosageValue").value.trim();
@@ -245,36 +297,48 @@ async function saveMedication() {
     return;
   }
 
+  const count = parseInt(scheduleCount);
+  const times = [];
+  for (let i = 1; i <= count; i++) {
+    const t = document.getElementById(`doseTime_${i}`)?.value;
+    if (t === undefined || t === "") { showToast(`Please set a time for Dose ${i}.`, true); return; }
+    const entry = { time: t };
+    if (scheduleUnit === "WEEKLY") {
+      entry.day = document.getElementById(`doseDay_${i}`)?.value;
+    } else if (scheduleUnit === "MONTHLY") {
+      entry.day = parseInt(document.getElementById(`doseDay_${i}`)?.value);
+    } else if (scheduleUnit === "YEARLY") {
+      entry.month = parseInt(document.getElementById(`doseMonth_${i}`)?.value);
+      entry.day   = parseInt(document.getElementById(`doseDay_${i}`)?.value);
+    }
+    times.push(entry);
+  }
+
   const dosage   = [dosageValue, dosageUnit];
-  const schedule = [parseInt(scheduleCount), scheduleUnit];
+  const schedule = [count, scheduleUnit];
 
   const btn = document.getElementById("submitBtn");
   btn.disabled = true;
   btn.textContent = "Saving...";
 
   try {
-    const docRef = await addDoc(
-  collection(db, "users", currentUser.uid, "medications"),
-  {
-    name,
-    dosage,
-    schedule,
-    startDate:  Timestamp.fromDate(new Date(startRaw)),
-    stopDate:   stopRaw  ? Timestamp.fromDate(new Date(stopRaw))  : null,
-    expiryDate: expRaw   ? Timestamp.fromDate(new Date(expRaw))   : null,
-    notes:      notes || ""
-  }
-);
-
-// create empty logs subcollection with a placeholder doc
-await setDoc(
-  doc(db, "users", currentUser.uid, "medications", docRef.id, "logs", "_init"),
-  { initialized: true }
-);
+    await addDoc(
+      collection(db, "users", currentUser.uid, "medications"),
+      {
+        name,
+        dosage,
+        schedule,
+        times,
+        startDate:  Timestamp.fromDate(new Date(startRaw)),
+        stopDate:   stopRaw  ? Timestamp.fromDate(new Date(stopRaw))  : null,
+        expiryDate: expRaw   ? Timestamp.fromDate(new Date(expRaw))   : null,
+        notes:      notes || ""
+      }
+    );
     showToast("Medication saved!");
-    setTimeout(() => window.location = "medications.html", 1200);
+    setTimeout(() => window.location = "app.html", 1200);
   } catch(e) {
-    showToast("(Turn off ad blockers, we don't have any ads) Error: " + e.message, true);
+    showToast("Error: " + e.message, true);
     btn.disabled = false;
     btn.textContent = "Save Medication";
   }
@@ -286,6 +350,7 @@ async function logout() {
 }
 
 window.saveMedication = saveMedication;
+window.updateTimePickers = updateTimePickers;
 window.logout = logout;
 </script>
 </body>
