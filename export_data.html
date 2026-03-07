@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Export Data – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+body{background:#f7f7f5;min-height:100vh;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;color:#1a1a1a;text-decoration:none;}
+.logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-user{font-size:13px;color:#888;}
+.btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:#c0392b;color:#fff;}
+
+.page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+.page-header{margin-bottom:32px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
+.back-link:hover{color:#c0392b;}
+.page h1{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;}
+.page h1 span{color:#c0392b;}
+.page-sub{font-size:0.9rem;color:#999;margin-top:6px;}
+
+.card{background:#fff;border-radius:20px;padding:36px;box-shadow:0 8px 40px rgba(0,0,0,0.07);margin-bottom:20px;}
+
+.export-option{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px;
+  border:1.5px solid #f0f0ee;
+  border-radius:14px;
+  margin-bottom:14px;
+  transition:all .2s;
+  cursor:pointer;
+  background:#fafafa;
+}
+.export-option:last-child{margin-bottom:0;}
+.export-option:hover{border-color:#c0392b;background:#fff;}
+.export-option-left{display:flex;align-items:center;gap:14px;}
+.export-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff0ef;color:#c0392b;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.export-label{font-size:15px;font-weight:700;color:#1a1a1a;}
+.export-desc{font-size:12px;color:#aaa;margin-top:3px;}
+.export-arrow{font-size:18px;color:#ddd;}
+
+.export-btn{
+  width:100%;padding:13px;
+  background:#c0392b;color:#fff;
+  border:none;border-radius:10px;
+  font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(192,57,43,0.25);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.export-btn:hover{background:#a93226;transform:translateY(-1px);}
+.export-btn:disabled{background:#e0a09a;cursor:not-allowed;transform:none;box-shadow:none;}
+
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .3s;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#c0392b;}
+.toast.success{background:#27ae60;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html"><img src="pill.png"> MyPills</a>
+  <div class="header-right">
+    <span class="header-user" id="userEmail"></span>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-header">
+    <a class="back-link" href="app.html">← Back to dashboard</a>
+    <h1>Export <span>Data</span></h1>
+    <p class="page-sub">Download your data as a plain text file.</p>
+  </div>
+
+  <div class="card">
+    <div class="export-option" onclick="exportMedications()">
+      <div class="export-option-left">
+        <div class="export-icon">💊</div>
+        <div>
+          <div class="export-label">Medication Export</div>
+          <div class="export-desc">All medications, schedules, dosages, and sharing info.</div>
+        </div>
+      </div>
+      <div class="export-arrow">→</div>
+    </div>
+
+    <div class="export-option" onclick="exportDoctors()">
+      <div class="export-option-left">
+        <div class="export-icon">🩺</div>
+        <div>
+          <div class="export-label">Doctor Appointments Export</div>
+          <div class="export-desc">Coming soon — appointments not yet available.</div>
+        </div>
+      </div>
+      <div class="export-arrow">→</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+  });
+});
+
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast " + type + " show";
+  setTimeout(() => t.className = "toast", 3000);
+}
+
+function fmtTime(t) {
+  if (!t) return "";
+  const h = parseInt(String(t).slice(0,2));
+  const m = parseInt(String(t).slice(3,5));
+  return `${h%12||12}:${String(m).padStart(2,"0")} ${h<12?"AM":"PM"}`;
+}
+
+function fmtTimestamp(ts) {
+  if (!ts) return "N/A";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+}
+
+function buildScheduleStr(schedule, times) {
+  if (!Array.isArray(schedule)) return "N/A";
+  const count = schedule[0];
+  const unit  = schedule[1].charAt(0) + schedule[1].slice(1).toLowerCase();
+  const timeStrs = (times || []).map((entry, i) => {
+    if (!entry) return "";
+    const t = String(entry.time || "");
+    const unit_upper = schedule[1];
+    if (unit_upper === "HOURLY")  return `:${t.padStart(2,"0")} past each hour`;
+    if (unit_upper === "DAILY")   return fmtTime(t);
+    if (unit_upper === "WEEKLY")  return `${entry.day} at ${fmtTime(t)}`;
+    if (unit_upper === "MONTHLY") return `Day ${entry.day} at ${fmtTime(t)}`;
+    if (unit_upper === "YEARLY") {
+      const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      return `${MONTHS[parseInt(entry.month)-1]} ${entry.day} at ${fmtTime(t)}`;
+    }
+    return "";
+  }).filter(Boolean);
+
+  let str = `${count} time${count > 1 ? "s" : ""} every ${unit}`;
+  if (timeStrs.length > 0) str += ` (${timeStrs.join(", ")})`;
+  return str;
+}
+
+async function exportMedications() {
+  showToast("Preparing export...");
+  try {
+    // Get user doc
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    const userData = userDoc.data() || {};
+    const sharingWith = (userData.caregivers || []);
+
+    // Find users who have shared with current user (where current user is in their caregivers array)
+    const canViewSnap = await getDocs(
+      query(collection(db, "users"), where("caregivers", "array-contains", currentUser.email.toLowerCase()))
+    );
+    const canView = canViewSnap.docs.map(d => d.data().email || d.data().displayName || d.id);
+
+    // Get medications
+    const medsSnap = await getDocs(collection(db, "users", currentUser.uid, "medications"));
+    const meds = medsSnap.docs
+      .filter(d => d.id !== "_init" && d.data().name)
+      .map(d => d.data());
+
+    const now = new Date().toLocaleString("en-US", {
+      year:"numeric", month:"long", day:"numeric",
+      hour:"numeric", minute:"2-digit"
+    });
+
+    let lines = [];
+    lines.push("================================================");
+    lines.push("       MYPILLS DATA EXPORT (MEDICATIONS)");
+    lines.push("================================================");
+    lines.push(`Exported: ${now}`);
+    lines.push("");
+    lines.push(`USER:   ${currentUser.displayName || "N/A"}`);
+    lines.push(`EMAIL:  ${currentUser.email}`);
+    lines.push(`SHARING ACCESS WITH: ${sharingWith.length > 0 ? sharingWith.join(", ") : "None"}`);
+    lines.push(`ABLE TO VIEW DATA OF: ${canView.length > 0 ? canView.join(", ") : "None"}`);
+    lines.push("");
+    lines.push("------------------------------------------------");
+    lines.push(`MEDICATIONS (${meds.length} total)`);
+    lines.push("------------------------------------------------");
+
+    meds.forEach((med, i) => {
+      const dosage   = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : (med.dosage || "N/A");
+      const schedule = buildScheduleStr(med.schedule, med.times);
+      lines.push("");
+      lines.push(`Medication #${i+1}: ${med.name}`);
+      lines.push(`  Dosage:      ${dosage}`);
+      lines.push(`  Schedule:    ${schedule}`);
+      lines.push(`  Start Date:  ${fmtTimestamp(med.startDate)}`);
+      lines.push(`  End Date:    ${fmtTimestamp(med.stopDate)}`);
+      lines.push(`  Expiry Date: ${fmtTimestamp(med.expiryDate)}`);
+      lines.push(`  Notes:       ${med.notes ? med.notes : "None"}`);
+    });
+
+    lines.push("");
+    lines.push("================================================");
+    lines.push("           END OF EXPORT – MyPills");
+    lines.push("       mypills.kidslearninglab.com");
+    lines.push("================================================");
+
+    const text = lines.join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `mypills_medications_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Downloaded!", "success");
+  } catch(e) {
+    showToast("Export failed: " + e.message, "error");
+  }
+}
+
+function exportDoctors() {
+  showToast("Doctor appointments export coming soon.", "");
+}
+
+async function logout() {
+  await signOut(auth);
+  window.location = "index.html";
+}
+
+window.exportMedications = exportMedications;
+window.exportDoctors = exportDoctors;
+window.logout = logout;
+</script>
+</body>
+</html>
