@@ -1,45 +1,200 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>MyPills App</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
-
+<title>Dashboard – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=calendar_check,pill,medication,ios_share,calendar_lock,clinical_notes,content_copy,logout" />
 <style>
 *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* <-- change this */
-  padding: 16px 32px;
-  border-bottom: 1px solid #ddd;
-  background: white;
-}.logo{display:flex;align-items:center;font-size:24px;font-weight:600;cursor:pointer;}
-.logo img{height:40px;margin-right:10px;}
-.nav button{border:1px solid black;border-radius:6px;padding:8px 16px;background:white;color:black;transition:all .25s ease;}
-.nav button:hover,.nav button:active{background:black;color:white;cursor:pointer;}
-.page{padding:80px;animation:slideIn .45s ease;text-align:center;}
-@keyframes slideIn{from{transform:translateX(100px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+body{background:#f7f7f5;min-height:100vh;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;color:#1a1a1a;text-decoration:none;}
+.logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-user{font-size:13px;color:#888;}
+.btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:#c0392b;color:#fff;}
+
+.page{max-width:860px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+
+/* GREETING */
+.greeting{margin-bottom:32px;}
+.greeting-sub{font-size:14px;color:#999;margin-bottom:6px;}
+.greeting-name{font-size:2rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.03em;}
+.greeting-name span{color:#c0392b;}
+
+/* DOSE STRIP */
+.dose-strip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#fff;border-radius:16px;
+  padding:20px 24px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.06);
+  margin-bottom:36px;
+  border-left:4px solid #c0392b;
+  gap:16px;flex-wrap:wrap;
+}
+.dose-strip-left{display:flex;align-items:center;gap:14px;}
+.dose-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff0ef;color:#c0392b;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.dose-text-main{font-size:16px;font-weight:700;color:#1a1a1a;}
+.dose-text-sub{font-size:13px;color:#999;margin-top:2px;}
+.dose-btn{
+  background:#c0392b;color:#fff;
+  border:none;border-radius:10px;
+  padding:10px 20px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+  text-decoration:none;display:inline-block;
+}
+.dose-btn:hover{background:#a93226;transform:translateY(-1px);}
+
+/* SECTION TITLE */
+.section-label{font-size:12px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:16px;}
+
+/* CARD GRID */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.grid{grid-template-columns:1fr;}}
+
+.nav-card{
+  background:#fff;
+  border-radius:18px;
+  padding:24px 22px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.05);
+  cursor:pointer;
+  text-decoration:none;
+  display:block;
+  transition:all .2s ease;
+  border:1.5px solid transparent;
+}
+.nav-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.1);border-color:#f0d0ce;}
+.nav-card.danger:hover{border-color:#f0d0ce;}
+
+.card-icon-wrap{
+  width:46px;height:46px;border-radius:12px;
+  background:#fff0ef;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:14px;
+}
+.nav-card.grey .card-icon-wrap{background:#f5f5f5;}
+.nav-card.danger .card-icon-wrap{background:#fff0ef;}
+
+.card-label{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.card-desc{font-size:12px;color:#aaa;line-height:1.5;}
+.card-icon-wrap .material-symbols-outlined{font-size:24px;color:#c0392b;}
+.nav-card.grey .card-icon-wrap .material-symbols-outlined{color:#aaa;}
+.nav-card.logout-card .card-icon-wrap .material-symbols-outlined{color:#c0392b;}
+
+/* LOGOUT CARD */
+.nav-card.logout-card{background:#fff0ef;border-color:#f0d0ce;}
+.nav-card.logout-card .card-label{color:#c0392b;}
+.nav-card.logout-card .card-desc{color:#e08070;}
+.nav-card.logout-card .card-icon-wrap{background:rgba(192,57,43,0.1);}
+.nav-card.logout-card:hover{background:#ffe0dd;border-color:#c0392b;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 </style>
 </head>
-
 <body>
+
 <header>
-<div class="logo" onclick="window.location='index.html'">
-<img src="pill.png">MyPills
-</div>
-<div class="nav">
-<button onclick="logout()">Log Out</button>
-</div>
+  <a class="logo" href="app.html"><img src="pill.png"> MyPills</a>
+  <div class="header-right">
+    <span class="header-user" id="userEmail"></span>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </div>
 </header>
 
 <div class="page">
-<h2>Welcome to MyPills</h2>
-<p>You are logged in with Google.</p>
+
+  <!-- GREETING -->
+  <div class="greeting">
+    <div class="greeting-sub">Welcome back,</div>
+    <div class="greeting-name" id="greetingName"><span>Loading...</span></div>
+  </div>
+
+  <!-- DOSE STRIP -->
+  <div class="dose-strip">
+    <div class="dose-strip-left">
+      <div class="dose-icon"><span class="material-symbols-outlined" style="font-size:24px;color:#c0392b;">pill</span></div>
+      <div>
+        <div class="dose-text-main" id="doseStripText">Checking doses...</div>
+        <div class="dose-text-sub">for today</div>
+      </div>
+    </div>
+    <a class="dose-btn" href="calendar.html">Go to Calendar →</a>
+  </div>
+
+  <!-- NAV GRID -->
+  <div class="section-label">Quick Access</div>
+  <div class="grid">
+
+    <a class="nav-card" href="calendar.html">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">calendar_check</span></div>
+      <div class="card-label">Calendar</div>
+      <div class="card-desc">Log and track your daily doses.</div>
+    </a>
+
+    <a class="nav-card" href="medications.html">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">pill</span></div>
+      <div class="card-label">Medications</div>
+      <div class="card-desc">View and manage all your medications.</div>
+    </a>
+
+    <a class="nav-card" href="new_medication.html">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">medication</span></div>
+      <div class="card-label">New Medication</div>
+      <div class="card-desc">Add a new medication to your list.</div>
+    </a>
+
+    <a class="nav-card" href="share_access.html">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">ios_share</span></div>
+      <div class="card-label">Share Access</div>
+      <div class="card-desc">Let a caregiver monitor your medications.</div>
+    </a>
+
+    <a class="nav-card" href="view_others.html">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">calendar_lock</span></div>
+      <div class="card-label">View Others</div>
+      <div class="card-desc">See medications of people who shared with you.</div>
+    </a>
+
+    <a class="nav-card grey" href="new_doctors.html">
+      <div class="card-icon-wrap" style="background:#f0f0ee;"><span class="material-symbols-outlined">clinical_notes</span></div>
+      <div class="card-label">Doctor's Appointment</div>
+      <div class="card-desc">Log an upcoming doctor visit.</div>
+    </a>
+
+    <a class="nav-card grey" href="export_data.html">
+      <div class="card-icon-wrap" style="background:#f0f0ee;"><span class="material-symbols-outlined">content_copy</span></div>
+      <div class="card-label">Export Data</div>
+      <div class="card-desc">Download your medication history.</div>
+    </a>
+
+    <a class="nav-card logout-card" onclick="logout()" href="#">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+      <div class="card-label">Log Out</div>
+      <div class="card-desc">Sign out of your account.</div>
+    </a>
+
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -53,19 +208,100 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
 
-// redirect if not logged in
-onAuthStateChanged(auth, user => {
-  if(!user) window.location = "index.html";
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    const name = user.displayName ? user.displayName.split(" ")[0] : user.email;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+    document.getElementById("greetingName").innerHTML = `Good ${getTimeOfDay()}, <span>${name}</span>`;
+    await loadDoseStrip();
+  });
 });
 
-function logout(){
-  signOut(auth).then(()=>{
-    window.location="index.html";
-  });
+function getTimeOfDay() {
+  const h = new Date().getHours();
+  if (h < 12) return "morning";
+  if (h < 17) return "afternoon";
+  return "evening";
 }
 
-    window.logout = logout;
+function dateKey(d) {
+  return `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()}`;
+}
+
+async function loadDoseStrip() {
+  const today = new Date();
+  const todayKey = dateKey(today);
+  const stripText = document.getElementById("doseStripText");
+
+  const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
+  const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const WEEK_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  try {
+    const medsSnap = await getDocs(collection(db, "users", currentUser.uid, "medications"));
+    const meds = medsSnap.docs
+      .filter(d => d.id !== "_init" && d.data().name)
+      .map(d => ({ id: d.id, ...d.data() }));
+
+    let totalDoses = 0;
+    let takenOrSkipped = 0;
+
+    for (const med of meds) {
+      const start  = toD(med.startDate);
+      const stop   = toD(med.stopDate);
+      const expiry = toD(med.expiryDate);
+      const end    = (stop && expiry) ? (stop < expiry ? stop : expiry) : (stop || expiry || null);
+      const sel    = stripTime(today);
+      if (start && sel < stripTime(start)) continue;
+      if (end   && sel > stripTime(end))   continue;
+
+      const unit  = Array.isArray(med.schedule) ? med.schedule[1] : "DAILY";
+      const count = Array.isArray(med.schedule) ? parseInt(med.schedule[0]) || 1 : 1;
+      const times = med.times || [];
+
+      for (let d = 1; d <= count; d++) {
+        const entry = times[d-1] || null;
+        let applies = true;
+        if (unit === "WEEKLY"  && entry) applies = entry.day === WEEK_DAYS[today.getDay()];
+        if (unit === "MONTHLY" && entry) applies = parseInt(entry.day) === today.getDate();
+        if (unit === "YEARLY"  && entry) applies = parseInt(entry.month) === today.getMonth()+1 && parseInt(entry.day) === today.getDate();
+        if (!applies) continue;
+
+        totalDoses++;
+
+        const logs = await getDocs(query(
+          collection(db, "users", currentUser.uid, "medications", med.id, "logs"),
+          where("day", "==", todayKey),
+          where("dose", "==", d)
+        ));
+        if (!logs.empty) takenOrSkipped++;
+      }
+    }
+
+    const remaining = totalDoses - takenOrSkipped;
+    if (totalDoses === 0) {
+      stripText.textContent = "No doses scheduled today";
+    } else if (remaining === 0) {
+      stripText.textContent = "All doses logged for today ✓";
+    } else {
+      stripText.textContent = `${remaining} dose${remaining > 1 ? "s" : ""} not yet logged`;
+    }
+  } catch(e) {
+    stripText.textContent = "Could not load doses";
+  }
+}
+
+async function logout() {
+  await signOut(auth);
+  window.location = "index.html";
+}
+
+window.logout = logout;
 </script>
 </body>
 </html>
