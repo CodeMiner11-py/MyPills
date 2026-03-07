@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" type="image/png" href="logo.png">
 <title>Export Data – MyPills</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -75,6 +74,7 @@ header{
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 </style>
+<link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
 
@@ -110,7 +110,7 @@ header{
         <div class="export-icon">🩺</div>
         <div>
           <div class="export-label">Doctor Appointments Export</div>
-          <div class="export-desc">Coming soon — appointments not yet available.</div>
+          <div class="export-desc">All appointments, doctors, addresses, and sharing info.</div>
         </div>
       </div>
       <div class="export-arrow">→</div>
@@ -265,8 +265,83 @@ async function exportMedications() {
   }
 }
 
-function exportDoctors() {
-  showToast("Doctor appointments export coming soon.", "");
+async function exportDoctors() {
+  showToast("Preparing export...");
+  try {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    const userData = userDoc.data() || {};
+    const sharingWith = userData.caregivers || [];
+
+    const canViewSnap = await getDocs(
+      query(collection(db, "users"), where("caregivers", "array-contains", currentUser.email.toLowerCase()))
+    );
+    const canView = canViewSnap.docs.map(d => d.data().email || d.data().displayName || d.id);
+
+    const apptsSnap = await getDocs(collection(db, "users", currentUser.uid, "appts"));
+    const appts = apptsSnap.docs
+      .filter(d => d.data().title)
+      .map(d => d.data())
+      .sort((a, b) => {
+        const ta = a.datetime?.toDate ? a.datetime.toDate() : new Date(0);
+        const tb = b.datetime?.toDate ? b.datetime.toDate() : new Date(0);
+        return ta - tb;
+      });
+
+    const now = new Date().toLocaleString("en-US", {
+      year:"numeric", month:"long", day:"numeric", hour:"numeric", minute:"2-digit"
+    });
+
+    let lines = [];
+    lines.push("================================================");
+    lines.push("       MYPILLS DATA EXPORT (APPOINTMENTS)");
+    lines.push("================================================");
+    lines.push(`Exported: ${now}`);
+    lines.push("");
+    lines.push(`USER:   ${currentUser.displayName || "N/A"}`);
+    lines.push(`EMAIL:  ${currentUser.email}`);
+    lines.push(`SHARING ACCESS WITH: ${sharingWith.length > 0 ? sharingWith.join(", ") : "None"}`);
+    lines.push(`ABLE TO VIEW DATA OF: ${canView.length > 0 ? canView.join(", ") : "None"}`);
+    lines.push("");
+    lines.push("------------------------------------------------");
+    lines.push(`APPOINTMENTS (${appts.length} total)`);
+    lines.push("------------------------------------------------");
+
+    appts.forEach((appt, i) => {
+      const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
+      const dtStr = dt ? dt.toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" })
+        + " at " + dt.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }) : "N/A";
+      const mapsUrl = appt.address
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(appt.address)}`
+        : "N/A";
+
+      lines.push("");
+      lines.push(`Appointment #${i+1}: ${appt.title}`);
+      lines.push(`  Doctor:    ${appt.doctor || "N/A"}`);
+      lines.push(`  Provider:  ${appt.provider || "N/A"}`);
+      lines.push(`  Date/Time: ${dtStr}`);
+      lines.push(`  Address:   ${appt.address || "N/A"}`);
+      lines.push(`  Maps Link: ${mapsUrl}`);
+      if (appt.description) lines.push(`  Notes:     ${appt.description}`);
+    });
+
+    lines.push("");
+    lines.push("================================================");
+    lines.push("           END OF EXPORT – MyPills");
+    lines.push("       mypills.kidslearninglab.com");
+    lines.push("================================================");
+
+    const text = lines.join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `mypills_appointments_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Downloaded!", "success");
+  } catch(e) {
+    showToast("Export failed: " + e.message, "error");
+  }
 }
 
 async function logout() {
