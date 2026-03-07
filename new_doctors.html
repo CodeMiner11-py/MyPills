@@ -72,6 +72,10 @@ textarea{resize:vertical;min-height:90px;}
 .autocomplete-item:hover{background:#fff0ef;color:#c0392b;}
 .autocomplete-item .addr-main{font-weight:600;}
 .autocomplete-item .addr-sub{font-size:11px;color:#aaa;margin-top:2px;}
+.address-verified{font-size:11px;font-weight:600;color:#27ae60;margin-top:6px;display:none;}
+.address-verified.show{display:block;}
+#addressInput.verified{border-color:#27ae60;background:#f0fff4;}
+#addressInput.verified:focus{border-color:#27ae60;box-shadow:0 0 0 3px rgba(39,174,96,0.1);}
 .autocomplete-spinner{padding:12px 14px;font-size:13px;color:#aaa;text-align:center;}
 
 .submit-btn{
@@ -134,6 +138,7 @@ textarea{resize:vertical;min-height:90px;}
       <label>Address</label>
       <input type="text" id="addressInput" placeholder="Start typing an address..." autocomplete="off">
       <div class="autocomplete-list" id="autocompleteList" style="display:none;"></div>
+      <div class="address-verified" id="addressVerified">✓ Address verified</div>
     </div>
 
     <!-- Hidden field storing confirmed address -->
@@ -189,7 +194,9 @@ function showToast(msg, type = "") {
 // ── Nominatim Address Autocomplete ─────────────────────────────────────────
 function onAddressInput() {
   const val = document.getElementById("addressInput").value.trim();
-  document.getElementById("addressConfirmed").value = ""; // reset confirmed
+  document.getElementById("addressConfirmed").value = "";
+  document.getElementById("addressInput").classList.remove("verified");
+  document.getElementById("addressVerified").classList.remove("show");
   clearTimeout(searchTimeout);
   if (val.length < 3) { hideList(); return; }
   showSpinner();
@@ -249,6 +256,8 @@ function renderList(results) {
 function selectAddress(full, display) {
   document.getElementById("addressInput").value = display;
   document.getElementById("addressConfirmed").value = full;
+  document.getElementById("addressInput").classList.add("verified");
+  document.getElementById("addressVerified").classList.add("show");
   hideList();
 }
 
@@ -266,8 +275,14 @@ async function saveAppointment() {
   const address     = document.getElementById("addressInput").value.trim();
   const description = document.getElementById("description").value.trim();
 
+  const addressConfirmed = document.getElementById("addressConfirmed").value.trim();
   if (!title || !doctor || !datetimeVal || !address) {
     showToast("Please fill in title, doctor, date/time, and address.", "error");
+    return;
+  }
+  if (!addressConfirmed) {
+    showToast("Please select a verified address from the dropdown.", "error");
+    document.getElementById("addressInput").focus();
     return;
   }
 
