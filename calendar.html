@@ -345,15 +345,34 @@ async function renderDayBox() {
     return;
   }
 
-  // load logs for all meds on this day
-  const logMap = {}; // medId -> "TAKEN" | "SKIPPED" | null
-  for (const med of allMeds) {
+  const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
+  const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const activeMeds = allMeds.filter(med => {
+    const start  = toD(med.startDate);
+    const stop   = toD(med.stopDate);
+    const expiry = toD(med.expiryDate);
+    const end    = (stop && expiry) ? (stop < expiry ? stop : expiry) : (stop || expiry || null);
+    const sel    = stripTime(selectedDate);
+    if (start && sel < stripTime(start)) return false;
+    if (end   && sel > stripTime(end))   return false;
+    return true;
+  });
+
+  if (activeMeds.length === 0) {
+    content.innerHTML = `<div class="state-msg">No medications scheduled for this day.</div>`;
+    return;
+  }
+
+  // load logs for active meds on this day
+  const logMap = {};
+  for (const med of activeMeds) {
     const logs = await getLogsForDay(med.id, selectedDate);
     logMap[med.id] = logs.length > 0 ? logs[0].status : null;
   }
 
   content.innerHTML = "";
-  for (const med of allMeds) {
+  for (const med of activeMeds) {
     const status = logMap[med.id];
     const dosage = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
     const schedule = Array.isArray(med.schedule) ? `${med.schedule[0]}x ${med.schedule[1].charAt(0)+med.schedule[1].slice(1).toLowerCase()}` : med.schedule || "";
