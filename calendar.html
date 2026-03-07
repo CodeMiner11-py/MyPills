@@ -346,7 +346,47 @@ async function renderDayBox() {
   const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
   const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-  const activeMeds = allMeds.filter(med => {
+  const WEEK_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  // Format time string "HH:MM" -> "8:30 AM"
+  function fmtTime(t) {
+    if (!t) return "";
+    const [hStr, mStr] = t.split(":");
+    let h = parseInt(hStr), m = parseInt(mStr);
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${String(m).padStart(2,"0")} ${ampm}`;
+  }
+
+  // Check if a dose (from times array) applies to selectedDate
+  function doseAppliesToDay(doseEntry, unit) {
+    if (!doseEntry) return true;
+    const sel = selectedDate;
+    if (unit === "WEEKLY") {
+      const dayName = WEEK_DAYS[sel.getDay()];
+      return doseEntry.day === dayName;
+    } else if (unit === "MONTHLY") {
+      return sel.getDate() === parseInt(doseEntry.day);
+    } else if (unit === "YEARLY") {
+      return sel.getMonth() + 1 === parseInt(doseEntry.month) &&
+             sel.getDate() === parseInt(doseEntry.day);
+    }
+    return true; // DAILY and HOURLY always show
+  }
+
+  function doseTimeLabel(doseEntry, unit) {
+    if (!doseEntry) return "";
+    if (unit === "HOURLY") return `:${String(doseEntry.time).padStart(2,"0")} past each hour`;
+    if (unit === "DAILY")   return fmtTime(doseEntry.time);
+    if (unit === "WEEKLY")  return `${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
+    if (unit === "MONTHLY") return `Day ${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
+    if (unit === "YEARLY")  return `${MONTH_NAMES[parseInt(doseEntry.month)-1]} ${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
+    return "";
+  }
+
+  // Filter by date range first
+  const dateMeds = allMeds.filter(med => {
     const start  = toD(med.startDate);
     const stop   = toD(med.stopDate);
     const expiry = toD(med.expiryDate);
@@ -357,32 +397,37 @@ async function renderDayBox() {
     return true;
   });
 
-  if (activeMeds.length === 0) {
+  // Build dose rows, filtering by schedule match for selected day
+  const doseRows = [];
+  for (const med of dateMeds) {
+    const totalDoses = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
+    const unit = Array.isArray(med.schedule) ? med.schedule[1] : "DAILY";
+    const times = med.times || [];
+    for (let d = 1; d <= totalDoses; d++) {
+      const doseEntry = times[d - 1] || null;
+      if (!doseAppliesToDay(doseEntry, unit)) continue;
+      doseRows.push({ med, dose: d, totalDoses, doseEntry, unit });
+    }
+  }
+
+  if (doseRows.length === 0) {
     content.innerHTML = `<div class="state-msg">No medications scheduled for this day.</div>`;
     return;
   }
 
-  // build dose rows for all active meds
-  const doseRows = []; // { med, dose (1-based), totalDoses }
-  for (const med of activeMeds) {
-    const totalDoses = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
-    for (let d = 1; d <= totalDoses; d++) {
-      doseRows.push({ med, dose: d, totalDoses });
-    }
-  }
-
   // load logs for each dose
-  const logMap = {}; // key: `${medId}_${dose}` -> status
+  const logMap = {};
   for (const { med, dose } of doseRows) {
     const logs = await getLogsForDay(med.id, selectedDate, dose);
     logMap[`${med.id}_${dose}`] = logs.length > 0 ? logs[0].status : null;
   }
 
   content.innerHTML = "";
-  for (const { med, dose, totalDoses } of doseRows) {
+  for (const { med, dose, totalDoses, doseEntry, unit } of doseRows) {
     const status = logMap[`${med.id}_${dose}`];
     const dosage = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
     const doseLabel = totalDoses > 1 ? ` · Dose ${dose} of ${totalDoses}` : "";
+    const timeLabel = doseTimeLabel(doseEntry, unit);
     const rowId = `${med.id}_${dose}`;
 
     const row = document.createElement("div");
@@ -390,7 +435,7 @@ async function renderDayBox() {
     row.innerHTML = `
       <div class="med-row-info">
         <div class="med-row-name">${med.name}${doseLabel}</div>
-        <div class="med-row-dose">${dosage}</div>
+        <div class="med-row-dose">${dosage}${timeLabel ? ' · ' + timeLabel : ''}</div>
       </div>
       <div class="med-row-actions">
         <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${rowId}" onclick="logAction('${med.id}', 'TAKEN', ${dose})">Take</button>
