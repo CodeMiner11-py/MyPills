@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" type="image/png" href="logo.png">
 <title>Calendar – MyPills</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -201,6 +200,7 @@ header{
   to{opacity:1;transform:translateY(0);}
 }
 </style>
+<link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
 
@@ -479,6 +479,8 @@ async function renderDayBox() {
            dt.getMonth()    === selectedDate.getMonth() &&
            dt.getDate()     === selectedDate.getDate();
   });
+
+  if (doseRows.length === 0 && dayAppts.length === 0) {
     content.innerHTML = `<div class="state-msg">Nothing scheduled for this day.</div>`;
     return;
   }
