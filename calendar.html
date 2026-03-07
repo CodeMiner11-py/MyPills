@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Calendar – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+body{background:#f7f7f5;min-height:100vh;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+.logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-user{font-size:13px;color:#888;}
+.btn-logout{
+  background:transparent;color:#c0392b;border:1.5px solid #c0392b;
+  border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s ease;
+}
+.btn-logout:hover{background:#c0392b;color:#fff;}
+
+.page{
+  max-width:700px;
+  margin:0 auto;
+  padding:48px 20px;
+  animation:fadeUp .45s ease both;
+}
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;color:#aaa;text-decoration:none;
+  margin-bottom:16px;transition:color .2s;
+}
+.back-link:hover{color:#c0392b;}
+.page h1{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;margin-bottom:28px;}
+.page h1 span{color:#c0392b;}
+
+/* CALENDAR */
+.cal-card{
+  background:#fff;
+  border-radius:20px;
+  padding:28px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.06);
+  margin-bottom:24px;
+}
+.cal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.cal-month{font-size:1.1rem;font-weight:700;color:#1a1a1a;}
+.cal-nav{
+  display:flex;gap:8px;
+}
+.cal-nav button{
+  background:none;border:1.5px solid #e0e0e0;
+  border-radius:8px;width:32px;height:32px;
+  font-size:14px;cursor:pointer;color:#555;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+.cal-nav button:hover{border-color:#c0392b;color:#c0392b;}
+
+.cal-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+.cal-day-label{
+  text-align:center;font-size:11px;font-weight:600;
+  color:#bbb;text-transform:uppercase;letter-spacing:0.05em;
+  padding:4px 0 8px;
+}
+.cal-day{
+  aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;
+  font-size:13px;font-weight:500;
+  color:#1a1a1a;
+  cursor:pointer;
+  transition:all .2s;
+  position:relative;
+}
+.cal-day:hover{background:#fef0ef;}
+.cal-day.empty{cursor:default;}
+.cal-day.empty:hover{background:none;}
+.cal-day.today{
+  background:#c0392b;color:#fff;font-weight:700;
+}
+.cal-day.today:hover{background:#a93226;}
+.cal-day.selected{
+  background:#fef0ef;color:#c0392b;font-weight:700;
+  outline:2px solid #c0392b;
+}
+.cal-day.today.selected{
+  background:#c0392b;color:#fff;
+  outline:2px solid #c0392b;
+}
+.cal-day .dot{
+  position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:#c0392b;
+}
+.cal-day.today .dot{background:#fff;}
+
+/* DAY BOX */
+.day-box{
+  background:#fff;
+  border-radius:20px;
+  padding:28px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.06);
+}
+.day-box-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.day-box-title{font-size:1rem;font-weight:700;color:#1a1a1a;}
+.day-box-date{font-size:13px;color:#aaa;}
+
+.med-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;
+  border-bottom:1px solid #f5f5f3;
+  gap:12px;
+}
+.med-row:last-child{border-bottom:none;}
+.med-row-info{}
+.med-row-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.med-row-dose{font-size:12px;color:#aaa;}
+.med-row-actions{display:flex;gap:8px;flex-shrink:0;}
+
+.log-btn{
+  padding:7px 16px;
+  border-radius:8px;
+  font-size:12px;font-weight:600;
+  cursor:pointer;
+  transition:all .2s ease;
+  border:1.5px solid #c0392b;
+  background:transparent;
+  color:#c0392b;
+}
+.log-btn.active{
+  background:#c0392b;
+  color:#fff;
+}
+.log-btn:hover{opacity:0.85;}
+
+.state-msg{
+  text-align:center;padding:40px 20px;color:#bbb;font-size:0.9rem;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <img src="pill.png"> MyPills
+  </a>
+  <div class="header-right">
+    <span class="header-user" id="userEmail"></span>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </div>
+</header>
+
+<div class="page">
+  <a class="back-link" href="app.html">← Back to dashboard</a>
+  <h1>My <span>Calendar</span></h1>
+
+  <div class="cal-card">
+    <div class="cal-header">
+      <div class="cal-month" id="calMonth"></div>
+      <div class="cal-nav">
+        <button onclick="changeMonth(-1)">&#8592;</button>
+        <button onclick="changeMonth(1)">&#8594;</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <div class="day-box">
+    <div class="day-box-header">
+      <div class="day-box-title">Medications</div>
+      <div class="day-box-date" id="dayBoxDate"></div>
+    </div>
+    <div id="dayBoxContent"><div class="state-msg">Loading...</div></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let allMeds = [];
+let selectedDate = new Date();
+let calYear = selectedDate.getFullYear();
+let calMonth = selectedDate.getMonth();
+
+// dateKey: "MM/DD/YYYY"
+function dateKey(d) {
+  return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
+function sameDay(a, b) {
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+function fmtSelected(d) {
+  return d.toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric", year:"numeric"});
+}
+
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+    await loadMeds();
+    renderCalendar();
+    renderDayBox();
+  });
+});
+
+async function loadMeds() {
+  const snap = await getDocs(collection(db, "users", currentUser.uid, "medications"));
+  allMeds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// Get logs for a specific medication on a specific date
+async function getLogsForDay(medId, date) {
+  const key = dateKey(date);
+  const snap = await getDocs(
+    query(
+      collection(db, "users", currentUser.uid, "medications", medId, "logs"),
+      where("day", "==", key)
+    )
+  );
+  return snap.docs.map(d => ({ logId: d.id, ...d.data() }));
+}
+
+// Save a log (remove existing one for that med+day first)
+async function setLog(medId, date, status) {
+  const key = dateKey(date);
+  const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
+
+  // delete any existing log for that day
+  const existing = await getDocs(query(logsRef, where("day", "==", key)));
+  for (const d of existing.docs) {
+    await deleteDoc(doc(db, "users", currentUser.uid, "medications", medId, "logs", d.id));
+  }
+
+  // if same status was already active (toggle off), just leave deleted
+  if (status === null) return;
+
+  // write new log
+  await addDoc(logsRef, {
+    medicationId: medId,
+    status: status,   // "TAKEN" or "SKIPPED"
+    day: key
+  });
+}
+
+// --- CALENDAR ---
+function renderCalendar() {
+  const today = new Date();
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("calMonth").textContent = `${months[calMonth]} ${calYear}`;
+
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+
+  // day labels
+  ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(l => {
+    const el = document.createElement("div");
+    el.className = "cal-day-label";
+    el.textContent = l;
+    grid.appendChild(el);
+  });
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement("div");
+    el.className = "cal-day empty";
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const el = document.createElement("div");
+    el.className = "cal-day";
+    if (sameDay(date, today)) el.classList.add("today");
+    if (sameDay(date, selectedDate)) el.classList.add("selected");
+    el.textContent = d;
+    el.onclick = () => selectDay(date);
+    grid.appendChild(el);
+  }
+}
+
+function selectDay(date) {
+  selectedDate = date;
+  renderCalendar();
+  renderDayBox();
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+// --- DAY BOX ---
+async function renderDayBox() {
+  document.getElementById("dayBoxDate").textContent = fmtSelected(selectedDate);
+  const content = document.getElementById("dayBoxContent");
+  content.innerHTML = `<div class="state-msg">Loading...</div>`;
+
+  if (allMeds.length === 0) {
+    content.innerHTML = `<div class="state-msg">No medications added yet.</div>`;
+    return;
+  }
+
+  // load logs for all meds on this day
+  const logMap = {}; // medId -> "TAKEN" | "SKIPPED" | null
+  for (const med of allMeds) {
+    const logs = await getLogsForDay(med.id, selectedDate);
+    logMap[med.id] = logs.length > 0 ? logs[0].status : null;
+  }
+
+  content.innerHTML = "";
+  for (const med of allMeds) {
+    const status = logMap[med.id];
+    const dosage = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
+    const schedule = Array.isArray(med.schedule) ? `${med.schedule[0]}x ${med.schedule[1].charAt(0)+med.schedule[1].slice(1).toLowerCase()}` : med.schedule || "";
+
+    const row = document.createElement("div");
+    row.className = "med-row";
+    row.id = `row-${med.id}`;
+    row.innerHTML = `
+      <div class="med-row-info">
+        <div class="med-row-name">${med.name}</div>
+        <div class="med-row-dose">${dosage} · ${schedule}</div>
+      </div>
+      <div class="med-row-actions">
+        <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${med.id}" onclick="logAction('${med.id}', 'TAKEN')">Take</button>
+        <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${med.id}" onclick="logAction('${med.id}', 'SKIPPED')">Skip</button>
+      </div>
+    `;
+    content.appendChild(row);
+  }
+}
+
+async function logAction(medId, status) {
+  const takeBtn = document.getElementById(`take-${medId}`);
+  const skipBtn = document.getElementById(`skip-${medId}`);
+
+  // check current state — if already active, toggle off
+  const currentlyActive = (status === 'TAKEN' && takeBtn.classList.contains('active')) ||
+                           (status === 'SKIPPED' && skipBtn.classList.contains('active'));
+
+  // optimistic UI
+  takeBtn.classList.remove('active');
+  skipBtn.classList.remove('active');
+
+  if (!currentlyActive) {
+    if (status === 'TAKEN') takeBtn.classList.add('active');
+    else skipBtn.classList.add('active');
+    await setLog(medId, selectedDate, status);
+  } else {
+    await setLog(medId, selectedDate, null); // toggle off
+  }
+}
+
+async function logout() {
+  await signOut(auth);
+  window.location = "index.html";
+}
+
+window.logAction = logAction;
+window.logout = logout;
+window.changeMonth = changeMonth;
+</script>
+</body>
+</html>
