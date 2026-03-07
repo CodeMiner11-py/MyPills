@@ -302,12 +302,18 @@ async function loadMedications(uid) {
       card.className = "med-card";
 
       let progressHTML = `<div class="progress-section">`;
-      if (coursePct !== null) {
-        progressHTML += `
-          <div class="progress-label"><span>Course progress</span><span>${coursePct}%</span></div>
-          <div class="progress-track"><div class="progress-fill ${coursePct >= 90 ? 'fill-red' : 'fill-green'}" style="width:${coursePct}%"></div></div>`;
-      }
-      progressHTML += `</div>`;
+if (coursePct !== null) {
+  progressHTML += `
+    <div class="progress-label"><span>Progress</span><span>${coursePct}%</span></div>
+    <div class="progress-track"><div class="progress-fill ${coursePct >= 90 ? 'fill-red' : 'fill-green'}" style="width:${coursePct}%"></div></div>`;
+}
+if (expPct !== null) {
+  const expColor = expPct >= 90 ? 'fill-red' : 'fill-yellow';
+  progressHTML += `
+    <div class="progress-label"><span>Expiry</span><span>${expPct}%</span></div>
+    <div class="progress-track"><div class="progress-fill ${expColor}" style="width:${expPct}%"></div></div>`;
+}
+progressHTML += `</div>`;
 
       card.innerHTML = `
         <div class="med-top">
