@@ -249,37 +249,35 @@ async function loadMeds() {
   allMeds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// Get logs for a specific medication on a specific date
-async function getLogsForDay(medId, date) {
+// Get logs for a specific medication on a specific date (optionally filtered by dose)
+async function getLogsForDay(medId, date, dose) {
   const key = dateKey(date);
-  const snap = await getDocs(
-    query(
-      collection(db, "users", currentUser.uid, "medications", medId, "logs"),
-      where("day", "==", key)
-    )
-  );
+  const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
+  const q = dose != null
+    ? query(logsRef, where("day", "==", key), where("dose", "==", dose))
+    : query(logsRef, where("day", "==", key));
+  const snap = await getDocs(q);
   return snap.docs.map(d => ({ logId: d.id, ...d.data() }));
 }
 
-// Save a log (remove existing one for that med+day first)
-async function setLog(medId, date, status) {
+// Save a log for a specific dose (remove existing one for that med+day+dose first)
+async function setLog(medId, date, status, dose) {
   const key = dateKey(date);
   const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
 
-  // delete any existing log for that day
-  const existing = await getDocs(query(logsRef, where("day", "==", key)));
+  // delete existing log for this day+dose
+  const existing = await getDocs(query(logsRef, where("day", "==", key), where("dose", "==", dose)));
   for (const d of existing.docs) {
     await deleteDoc(doc(db, "users", currentUser.uid, "medications", medId, "logs", d.id));
   }
 
-  // if same status was already active (toggle off), just leave deleted
   if (status === null) return;
 
-  // write new log
   await addDoc(logsRef, {
     medicationId: medId,
-    status: status,   // "TAKEN" or "SKIPPED"
-    day: key
+    status: status,  // "TAKEN" or "SKIPPED"
+    day: key,
+    dose: dose       // 1-based dose number
   });
 }
 
@@ -364,41 +362,50 @@ async function renderDayBox() {
     return;
   }
 
-  // load logs for active meds on this day
-  const logMap = {};
+  // build dose rows for all active meds
+  const doseRows = []; // { med, dose (1-based), totalDoses }
   for (const med of activeMeds) {
-    const logs = await getLogsForDay(med.id, selectedDate);
-    logMap[med.id] = logs.length > 0 ? logs[0].status : null;
+    const totalDoses = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
+    for (let d = 1; d <= totalDoses; d++) {
+      doseRows.push({ med, dose: d, totalDoses });
+    }
+  }
+
+  // load logs for each dose
+  const logMap = {}; // key: `${medId}_${dose}` -> status
+  for (const { med, dose } of doseRows) {
+    const logs = await getLogsForDay(med.id, selectedDate, dose);
+    logMap[`${med.id}_${dose}`] = logs.length > 0 ? logs[0].status : null;
   }
 
   content.innerHTML = "";
-  for (const med of activeMeds) {
-    const status = logMap[med.id];
+  for (const { med, dose, totalDoses } of doseRows) {
+    const status = logMap[`${med.id}_${dose}`];
     const dosage = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
-    const schedule = Array.isArray(med.schedule) ? `${med.schedule[0]}x ${med.schedule[1].charAt(0)+med.schedule[1].slice(1).toLowerCase()}` : med.schedule || "";
+    const doseLabel = totalDoses > 1 ? ` · Dose ${dose} of ${totalDoses}` : "";
+    const rowId = `${med.id}_${dose}`;
 
     const row = document.createElement("div");
     row.className = "med-row";
-    row.id = `row-${med.id}`;
     row.innerHTML = `
       <div class="med-row-info">
-        <div class="med-row-name">${med.name}</div>
-        <div class="med-row-dose">${dosage} · ${schedule}</div>
+        <div class="med-row-name">${med.name}${doseLabel}</div>
+        <div class="med-row-dose">${dosage}</div>
       </div>
       <div class="med-row-actions">
-        <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${med.id}" onclick="logAction('${med.id}', 'TAKEN')">Take</button>
-        <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${med.id}" onclick="logAction('${med.id}', 'SKIPPED')">Skip</button>
+        <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${rowId}" onclick="logAction('${med.id}', 'TAKEN', ${dose})">Take</button>
+        <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${rowId}" onclick="logAction('${med.id}', 'SKIPPED', ${dose})">Skip</button>
       </div>
     `;
     content.appendChild(row);
   }
 }
 
-async function logAction(medId, status) {
-  const takeBtn = document.getElementById(`take-${medId}`);
-  const skipBtn = document.getElementById(`skip-${medId}`);
+async function logAction(medId, status, dose) {
+  const rowId = `${medId}_${dose}`;
+  const takeBtn = document.getElementById(`take-${rowId}`);
+  const skipBtn = document.getElementById(`skip-${rowId}`);
 
-  // check current state — if already active, toggle off
   const currentlyActive = (status === 'TAKEN' && takeBtn.classList.contains('active')) ||
                            (status === 'SKIPPED' && skipBtn.classList.contains('active'));
 
@@ -409,9 +416,9 @@ async function logAction(medId, status) {
   if (!currentlyActive) {
     if (status === 'TAKEN') takeBtn.classList.add('active');
     else skipBtn.classList.add('active');
-    await setLog(medId, selectedDate, status);
+    await setLog(medId, selectedDate, status, dose);
   } else {
-    await setLog(medId, selectedDate, null); // toggle off
+    await setLog(medId, selectedDate, null, dose);
   }
 }
 
