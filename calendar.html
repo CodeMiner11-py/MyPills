@@ -153,6 +153,48 @@ header{
   text-align:center;padding:40px 20px;color:#bbb;font-size:0.9rem;
 }
 
+/* SECTION DIVIDER */
+.day-section-label{
+  font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;
+  letter-spacing:0.08em;padding:14px 0 6px;
+  border-top:1px solid #f0f0ee;margin-top:4px;
+}
+.day-section-label:first-child{border-top:none;padding-top:0;}
+
+/* APPT ROW */
+.appt-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;
+  border-bottom:1px solid #f5f5f3;
+  gap:12px;
+}
+.appt-row:last-child{border-bottom:none;}
+.appt-row-info{}
+.appt-row-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.appt-row-meta{font-size:12px;color:#aaa;}
+.appt-row-actions{display:flex;gap:8px;flex-shrink:0;}
+
+.appt-btn{
+  padding:7px 14px;
+  border-radius:8px;
+  font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  border:1.5px solid #c0392b;
+  background:transparent;color:#c0392b;
+  text-decoration:none;display:inline-flex;align-items:center;
+}
+.appt-btn.complete.done{background:#c0392b;color:#fff;}
+.appt-btn:hover{opacity:0.8;}
+.appt-btn.view-link{border-color:#bbb;color:#888;}
+.appt-btn.view-link:hover{border-color:#c0392b;color:#c0392b;}
+
+/* appt dot — blue so it's distinct from med dot */
+.cal-day .appt-dot{
+  position:absolute;bottom:3px;right:6px;
+  width:4px;height:4px;border-radius:50%;background:#2980b9;
+}
+.cal-day.today .appt-dot{background:#fff;opacity:0.8;}
+
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(24px);}
   to{opacity:1;transform:translateY(0);}
@@ -205,7 +247,7 @@ const firebaseConfig = {
   authDomain: "mypills-f768a.firebaseapp.com",
   projectId: "mypills-f768a",
   storageBucket: "mypills-f768a.appspot.com",
-  messagingSenderId: "150822030429",
+  messagingSenderId: "150822030449",
   appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
   measurementId: "G-4CSFQDQG8S"
 };
@@ -216,11 +258,11 @@ const db = getFirestore(app);
 
 let currentUser = null;
 let allMeds = [];
+let allAppts = [];
 let selectedDate = new Date();
 let calYear = selectedDate.getFullYear();
 let calMonth = selectedDate.getMonth();
 
-// dateKey: "MM/DD/YYYY"
 function dateKey(d) {
   return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
 }
@@ -239,6 +281,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     currentUser = user;
     document.getElementById("userEmail").textContent = user.displayName || user.email;
     await loadMeds();
+    await loadAppts();
     renderCalendar();
     renderDayBox();
   });
@@ -249,7 +292,13 @@ async function loadMeds() {
   allMeds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// Get logs for a specific medication on a specific date (optionally filtered by dose)
+async function loadAppts() {
+  const snap = await getDocs(collection(db, "users", currentUser.uid, "appts"));
+  allAppts = snap.docs
+    .filter(d => d.data().title)
+    .map(d => ({ id: d.id, ...d.data() }));
+}
+
 async function getLogsForDay(medId, date, dose) {
   const key = dateKey(date);
   const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
@@ -260,28 +309,22 @@ async function getLogsForDay(medId, date, dose) {
   return snap.docs.map(d => ({ logId: d.id, ...d.data() }));
 }
 
-// Save a log for a specific dose (remove existing one for that med+day+dose first)
 async function setLog(medId, date, status, dose) {
   const key = dateKey(date);
   const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
-
-  // delete existing log for this day+dose
   const existing = await getDocs(query(logsRef, where("day", "==", key), where("dose", "==", dose)));
   for (const d of existing.docs) {
     await deleteDoc(doc(db, "users", currentUser.uid, "medications", medId, "logs", d.id));
   }
-
   if (status === null) return;
-
   await addDoc(logsRef, {
     medicationId: medId,
-    status: status,  // "TAKEN" or "SKIPPED"
+    status: status,
     day: key,
-    dose: dose       // 1-based dose number
+    dose: dose
   });
 }
 
-// --- CALENDAR ---
 function renderCalendar() {
   const today = new Date();
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -290,7 +333,6 @@ function renderCalendar() {
   const grid = document.getElementById("calGrid");
   grid.innerHTML = "";
 
-  // day labels
   ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(l => {
     const el = document.createElement("div");
     el.className = "cal-day-label";
@@ -314,6 +356,36 @@ function renderCalendar() {
     if (sameDay(date, today)) el.classList.add("today");
     if (sameDay(date, selectedDate)) el.classList.add("selected");
     el.textContent = d;
+
+    // Med dot
+    const hasMed = allMeds.some(med => {
+      const toD = v => v ? (v.toDate ? v.toDate() : new Date(v)) : null;
+      const stripTime = x => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+      const start = toD(med.startDate), stop = toD(med.stopDate), expiry = toD(med.expiryDate);
+      const end = (stop && expiry) ? (stop < expiry ? stop : expiry) : (stop || expiry || null);
+      const sel = stripTime(date);
+      if (start && sel < stripTime(start)) return false;
+      if (end   && sel > stripTime(end))   return false;
+      return true;
+    });
+    if (hasMed) {
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      el.appendChild(dot);
+    }
+
+    // Appt dot
+    const hasAppt = allAppts.some(appt => {
+      const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
+      if (!dt) return false;
+      return dt.getFullYear() === date.getFullYear() && dt.getMonth() === date.getMonth() && dt.getDate() === date.getDate();
+    });
+    if (hasAppt) {
+      const adot = document.createElement("span");
+      adot.className = "appt-dot";
+      el.appendChild(adot);
+    }
+
     el.onclick = () => selectDay(date);
     grid.appendChild(el);
   }
@@ -332,7 +404,6 @@ function changeMonth(dir) {
   renderCalendar();
 }
 
-// --- DAY BOX ---
 async function renderDayBox() {
   document.getElementById("dayBoxDate").textContent = fmtSelected(selectedDate);
   const content = document.getElementById("dayBoxContent");
@@ -345,11 +416,9 @@ async function renderDayBox() {
 
   const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
   const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
   const WEEK_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  // Format time string "HH:MM" -> "8:30 AM"
   function fmtTime(t) {
     if (!t) return "";
     const [hStr, mStr] = t.split(":");
@@ -359,25 +428,18 @@ async function renderDayBox() {
     return `${h}:${String(m).padStart(2,"0")} ${ampm}`;
   }
 
-  // Check if a dose (from times array) applies to selectedDate
   function doseAppliesToDay(doseEntry, unit) {
     if (!doseEntry) return true;
     const sel = selectedDate;
-    if (unit === "WEEKLY") {
-      const dayName = WEEK_DAYS[sel.getDay()];
-      return doseEntry.day === dayName;
-    } else if (unit === "MONTHLY") {
-      return sel.getDate() === parseInt(doseEntry.day);
-    } else if (unit === "YEARLY") {
-      return sel.getMonth() + 1 === parseInt(doseEntry.month) &&
-             sel.getDate() === parseInt(doseEntry.day);
-    }
-    return true; // DAILY and HOURLY always show
+    if (unit === "WEEKLY")  return doseEntry.day === WEEK_DAYS[sel.getDay()];
+    if (unit === "MONTHLY") return sel.getDate() === parseInt(doseEntry.day);
+    if (unit === "YEARLY")  return sel.getMonth()+1 === parseInt(doseEntry.month) && sel.getDate() === parseInt(doseEntry.day);
+    return true;
   }
 
   function doseTimeLabel(doseEntry, unit) {
     if (!doseEntry) return "";
-    if (unit === "HOURLY") return `:${String(doseEntry.time).padStart(2,"0")} past each hour`;
+    if (unit === "HOURLY")  return `:${String(doseEntry.time).padStart(2,"0")} past each hour`;
     if (unit === "DAILY")   return fmtTime(doseEntry.time);
     if (unit === "WEEKLY")  return `${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
     if (unit === "MONTHLY") return `Day ${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
@@ -385,7 +447,6 @@ async function renderDayBox() {
     return "";
   }
 
-  // Filter by date range first
   const dateMeds = allMeds.filter(med => {
     const start  = toD(med.startDate);
     const stop   = toD(med.stopDate);
@@ -397,64 +458,117 @@ async function renderDayBox() {
     return true;
   });
 
-  // Build dose rows, filtering by schedule match for selected day
   const doseRows = [];
   for (const med of dateMeds) {
     const totalDoses = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
     const unit = Array.isArray(med.schedule) ? med.schedule[1] : "DAILY";
     const times = med.times || [];
     for (let d = 1; d <= totalDoses; d++) {
-      const doseEntry = times[d - 1] || null;
+      const doseEntry = times[d-1] || null;
       if (!doseAppliesToDay(doseEntry, unit)) continue;
       doseRows.push({ med, dose: d, totalDoses, doseEntry, unit });
     }
   }
 
-  if (doseRows.length === 0) {
-    content.innerHTML = `<div class="state-msg">No medications scheduled for this day.</div>`;
+  // Appointments for selected day
+  const dayAppts = allAppts.filter(appt => {
+    const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
+    if (!dt) return false;
+    return dt.getFullYear() === selectedDate.getFullYear() &&
+           dt.getMonth()    === selectedDate.getMonth() &&
+           dt.getDate()     === selectedDate.getDate();
+  });
+    content.innerHTML = `<div class="state-msg">Nothing scheduled for this day.</div>`;
     return;
   }
 
-  // load logs for each dose
   const logMap = {};
   for (const { med, dose } of doseRows) {
     const logs = await getLogsForDay(med.id, selectedDate, dose);
     logMap[`${med.id}_${dose}`] = logs.length > 0 ? logs[0].status : null;
   }
 
-  content.innerHTML = "";
-  for (const { med, dose, totalDoses, doseEntry, unit } of doseRows) {
-    const status = logMap[`${med.id}_${dose}`];
-    const dosage = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
-    const doseLabel = totalDoses > 1 ? ` · Dose ${dose} of ${totalDoses}` : "";
-    const timeLabel = doseTimeLabel(doseEntry, unit);
-    const rowId = `${med.id}_${dose}`;
+  // Appt completion map
+  const apptDoneMap = {};
+  for (const appt of dayAppts) {
+    const snap = await getDocs(query(
+      collection(db, "users", currentUser.uid, "apptLogs"),
+      where("apptId", "==", appt.id),
+      where("day", "==", dateKey(selectedDate))
+    ));
+    apptDoneMap[appt.id] = !snap.empty;
+  }
 
-    const row = document.createElement("div");
-    row.className = "med-row";
-    row.innerHTML = `
-      <div class="med-row-info">
-        <div class="med-row-name">${med.name}${doseLabel}</div>
-        <div class="med-row-dose">${dosage}${timeLabel ? ' · ' + timeLabel : ''}</div>
-      </div>
-      <div class="med-row-actions">
-        <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${rowId}" onclick="logAction('${med.id}', 'TAKEN', ${dose})">Take</button>
-        <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${rowId}" onclick="logAction('${med.id}', 'SKIPPED', ${dose})">Skip</button>
-      </div>
-    `;
-    content.appendChild(row);
+  content.innerHTML = "";
+
+  // ── Medications section ──
+  if (doseRows.length > 0) {
+    const medLabel = document.createElement("div");
+    medLabel.className = "day-section-label";
+    medLabel.textContent = "Medications";
+    content.appendChild(medLabel);
+
+    for (const { med, dose, totalDoses, doseEntry, unit } of doseRows) {
+      const status    = logMap[`${med.id}_${dose}`];
+      const dosage    = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
+      const doseLabel = totalDoses > 1 ? ` · Dose ${dose} of ${totalDoses}` : "";
+      const timeLabel = doseTimeLabel(doseEntry, unit);
+      const rowId     = `${med.id}_${dose}`;
+
+      const row = document.createElement("div");
+      row.className = "med-row";
+      row.innerHTML = `
+        <div class="med-row-info">
+          <div class="med-row-name">${med.name}${doseLabel}</div>
+          <div class="med-row-dose">${dosage}${timeLabel ? ' · ' + timeLabel : ''}</div>
+        </div>
+        <div class="med-row-actions">
+          <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${rowId}" onclick="logAction('${med.id}', 'TAKEN', ${dose})">Take</button>
+          <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${rowId}" onclick="logAction('${med.id}', 'SKIPPED', ${dose})">Skip</button>
+        </div>
+      `;
+      content.appendChild(row);
+    }
+  }
+
+  // ── Appointments section ──
+  if (dayAppts.length > 0) {
+    const apptLabel = document.createElement("div");
+    apptLabel.className = "day-section-label";
+    apptLabel.textContent = "Appointments";
+    content.appendChild(apptLabel);
+
+    for (const appt of dayAppts) {
+      const done = apptDoneMap[appt.id];
+      const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
+      const timeStr = dt ? dt.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }) : "";
+      const meta = [appt.doctor, appt.provider, timeStr].filter(Boolean).join(" · ");
+
+      const row = document.createElement("div");
+      row.className = "appt-row";
+      row.innerHTML = `
+        <div class="appt-row-info">
+          <div class="appt-row-name">${appt.title}</div>
+          <div class="appt-row-meta">${meta}</div>
+        </div>
+        <div class="appt-row-actions">
+          <button class="appt-btn complete ${done ? 'done' : ''}" id="complete-${appt.id}" onclick="toggleApptComplete('${appt.id}')">${done ? '✓ Done' : 'Complete'}</button>
+          <a class="appt-btn view-link" href="appointments.html">View</a>
+        </div>
+      `;
+      content.appendChild(row);
+    }
   }
 }
 
 async function logAction(medId, status, dose) {
-  const rowId = `${medId}_${dose}`;
+  const rowId   = `${medId}_${dose}`;
   const takeBtn = document.getElementById(`take-${rowId}`);
   const skipBtn = document.getElementById(`skip-${rowId}`);
 
   const currentlyActive = (status === 'TAKEN' && takeBtn.classList.contains('active')) ||
                            (status === 'SKIPPED' && skipBtn.classList.contains('active'));
 
-  // optimistic UI
   takeBtn.classList.remove('active');
   skipBtn.classList.remove('active');
 
@@ -467,12 +581,34 @@ async function logAction(medId, status, dose) {
   }
 }
 
+async function toggleApptComplete(apptId) {
+  const btn = document.getElementById(`complete-${apptId}`);
+  const day = dateKey(selectedDate);
+  const logsRef = collection(db, "users", currentUser.uid, "apptLogs");
+  const existing = await getDocs(query(logsRef, where("apptId", "==", apptId), where("day", "==", day)));
+
+  if (!existing.empty) {
+    // Undo completion
+    for (const d of existing.docs) {
+      await deleteDoc(doc(db, "users", currentUser.uid, "apptLogs", d.id));
+    }
+    btn.textContent = "Complete";
+    btn.classList.remove("done");
+  } else {
+    // Mark complete
+    await addDoc(logsRef, { apptId, day, completedAt: new Date().toISOString() });
+    btn.textContent = "✓ Done";
+    btn.classList.add("done");
+  }
+}
+
 async function logout() {
   await signOut(auth);
   window.location = "index.html";
 }
 
 window.logAction = logAction;
+window.toggleApptComplete = toggleApptComplete;
 window.logout = logout;
 window.changeMonth = changeMonth;
 </script>
