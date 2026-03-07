@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Continue</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+header{display:flex;align-items:center;padding:16px 32px;border-bottom:1px solid #ddd;background:white;}
+.logo{display:flex;align-items:center;font-size:24px;font-weight:600;cursor:pointer;}
+.logo img{height:40px;margin-right:10px;}
+.page{padding:80px;animation:slideIn .45s ease;text-align:center;}
+button{border:1px solid black;border-radius:6px;padding:12px 20px;background:white;color:black;transition:all .25s ease;}
+button:hover,button:active{background:black;color:white;cursor:pointer;}
+@keyframes slideIn{from{transform:translateX(100px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+</style>
+</head>
+
+<body>
+<header>
+<div class="logo" onclick="window.location='index.html'">
+<img src="pill.png">MyPills
+</div>
+</header>
+
+<div class="page">
+<h2>Sign in with Google</h2>
+<button onclick="googleLogin()">Sign In with Google</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+function googleLogin(){
+  signInWithPopup(auth, provider)
+    .then(result=>{
+      localStorage.setItem("token", result.user.uid);
+      window.location="app.html";
+    })
+    .catch(e=>alert(e.message));
+}
+
+window.googleLogin=googleLogin;
+</script>
+</body>
+</html>
