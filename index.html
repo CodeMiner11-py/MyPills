@@ -11,7 +11,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:16p
 .logo img{height:40px;margin-right:10px;}
 .nav button{border:1px solid black;border-radius:6px;padding:8px 16px;background:white;color:black;transition:all .25s ease;}
 .nav button:hover,.nav button:active{background:black;color:white;cursor:pointer;}
-.page{padding:80px;animation:slideIn .45s ease;text-align:center;}
+.page{margin:0;padding:0;position:relative;text-align:center;animation:slideIn .45s ease;}
 @keyframes slideIn{from{transform:translateX(100px);opacity:0;}to{transform:translateX(0);opacity:1;}}
 </style>
 </head>
@@ -21,22 +21,22 @@ header{display:flex;align-items:center;justify-content:space-between;padding:16p
 <div class="logo" onclick="window.location='index.html'">
 <img src="pill.png">MyPills
 </div>
-
 <div class="nav">
 <button onclick="window.location='continue.html'">Continue</button>
 </div>
 </header>
 
-<div class="page" style="position:relative;text-align:center;padding-bottom: 0px;padding-top:0px;">
-<img src="bg.png" style="width:100vw;height:auto;display:block;margin-left:calc(-80px);">
+<div class="page">
+  <img src="bg.png" style="width:100%;height:auto;display:block;">
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
     <h1>Welcome to MyPills</h1>
     <p>Click Continue to sign in and manage your medications.</p>
   </div>
 </div>
-    <script type="module">
+
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -51,12 +51,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// redirect if user is already logged in
 onAuthStateChanged(auth, user => {
   if(user) window.location = "app.html";
 });
 </script>
 
-</div>
 </body>
 </html>
