@@ -173,6 +173,16 @@ header{
 .modal-row-label{font-size:11px;font-weight:600;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;}
 .modal-row-value{font-size:14px;color:#1a1a1a;font-weight:500;}
 
+.delete-btn{
+  width:100%;margin-top:20px;
+  padding:12px;
+  background:transparent;color:#c0392b;
+  border:1.5px solid #c0392b;
+  border-radius:10px;font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .2s ease;
+}
+.delete-btn:hover{background:#c0392b;color:#fff;}
+
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(24px);}
   to{opacity:1;transform:translateY(0);}
@@ -216,8 +226,7 @@ header{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-import { getFirestore, collection, addDoc, Timestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -264,13 +273,16 @@ function pct(start, end) {
   return Math.round(((now - s) / (e - s)) * 100);
 }
 
-function expiryPct(start, expiry) {
-  if (!start || !expiry) return null;
+function expiryPct(expiry) {
+  if (!expiry) return null;
+  // show progress toward expiry: 0% = just dispensed (assume 1 year shelf), 100% = expired
   const now = Date.now();
-  const s = start.getTime(), e = expiry.getTime();
+  const e = expiry.getTime();
+  const shelf = 365 * 24 * 60 * 60 * 1000;
+  const start = e - shelf;
   if (now >= e) return 100;
-  if (now <= s) return 0;
-  return Math.round(((now - s) / (e - s)) * 100);
+  if (now <= start) return 0;
+  return Math.round(((now - start) / shelf) * 100);
 }
 
 function scheduleText(schedule) {
@@ -305,7 +317,7 @@ async function loadMedications(uid) {
       const stop    = toDate(d.stopDate);
       const expiry  = toDate(d.expiryDate);
       const coursePct  = pct(start, stop);
-      const expPct     = expiryPct(start, expiry);
+      const expPct     = expiryPct(expiry);
 
       const card = document.createElement("div");
       card.className = "med-card";
@@ -336,7 +348,7 @@ async function loadMedications(uid) {
               <span>🕐 ${scheduleText(d.schedule)}</span>
             </div>
           </div>
-<button class="view-btn" onclick="openModal('${docSnap.id}')">View more</button>
+          <button class="view-btn" onclick="openModal(${JSON.stringify(JSON.stringify(docSnap.id))})">View more</button>
         </div>
         ${progressHTML}
       `;
@@ -352,7 +364,8 @@ async function loadMedications(uid) {
   }
 }
 
-function openModal(id) {
+function openModal(idJson) {
+  const id = JSON.parse(idJson);
   const d = window.__meds[id];
   if (!d) return;
 
@@ -402,6 +415,7 @@ function openModal(id) {
         <div class="modal-row-value">${d.notes || "—"}</div>
       </div>
     </div>
+    <button class="delete-btn" onclick="deleteMed('${id}')">🗑 Delete Medication</button>
   `;
 
   document.getElementById("modalBackdrop").classList.add("open");
@@ -417,6 +431,17 @@ function closeModalDirect() {
   document.getElementById("modalBackdrop").classList.remove("open");
 }
 
+async function deleteMed(id) {
+  if (!confirm("Delete this medication? This cannot be undone.")) return;
+  try {
+    await deleteDoc(doc(db, "users", currentUser.uid, "medications", id));
+    closeModalDirect();
+    loadMedications(currentUser.uid);
+  } catch(e) {
+    alert("Error deleting: " + e.message);
+  }
+}
+
 async function logout() {
   await signOut(auth);
   window.location = "index.html";
@@ -425,6 +450,7 @@ async function logout() {
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.closeModalDirect = closeModalDirect;
+window.deleteMed = deleteMed;
 window.logout = logout;
 </script>
 </body>
