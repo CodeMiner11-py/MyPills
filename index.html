@@ -148,22 +148,7 @@ const auth = getAuth(app);
 onAuthStateChanged(auth, user => {
   if(user) window.location = "app.html";
 });
-const titles = [
-  "Never miss a dose again",
-  "Track your medications easily",
-  "Stay on top of your health",
-  "Reminders for every pill",
-  "Your personal medication assistant",
-  "Manage meds with confidence",
-  "Safe and simple medication tracking",
-  "Keep your health on schedule",
-  "Share your plan with caregivers",
-  "Smart reminders, better health"
-];
-
-const heroH1 = document.querySelector(".hero h1");
-let currentIndex = 0;
-
+// HERO random title
 const titles = [
   "Never miss a dose again",
   "Track your medications easily",
@@ -184,12 +169,15 @@ const currentIndex = Math.floor(Math.random() * titles.length);
 
 function showTitle(index) {
   const words = titles[index].split(" ");
-  const lastWord = words.pop(); // last word red
+  const lastWord = words.pop();
   const middle = Math.floor(words.length / 2);
   const firstHalf = words.slice(0, middle).join(" ");
   const secondHalf = words.slice(middle).join(" ");
   heroH1.innerHTML = firstHalf + '<br>' + secondHalf + ' <span>' + lastWord + '</span>';
-  heroH1.style.opacity = 1; // no fade needed here
+  // fade in smoothly
+  heroH1.style.opacity = 0;
+  heroH1.style.transition = "opacity 0.8s ease-in";
+  setTimeout(() => heroH1.style.opacity = 1, 50);
 }
 
 // show random title on page load
