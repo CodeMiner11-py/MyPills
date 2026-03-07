@@ -217,7 +217,24 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     currentUser = user;
     const name = user.displayName ? user.displayName.split(" ")[0] : user.email;
     document.getElementById("userEmail").textContent = user.displayName || user.email;
-    document.getElementById("greetingName").innerHTML = `Good ${getTimeOfDay()}, <span>${name}</span>`;
+
+    const greetings = [
+      `Good ${getTimeOfDay()}, <span>${name}</span>`,
+      `Welcome back, <span>${name}</span>!`,
+      `Ready for your day, <span>${name}</span>?`,
+      `Hello, <span>${name}</span>! Let’s track those doses.`,
+      `Time to check your medications, <span>${name}</span>.`,
+      `How’s it going today, <span>${name}</span>?`,
+      `Keep up the good work, <span>${name}</span>!`,
+      `Your meds are waiting, <span>${name}</span>.`,
+      `Let’s make this ${getTimeofDay()} healthy, <span>${name}</span>!`,
+      `<span>${name}</span>, here’s your daily overview.`,
+      `Let’s get started, <span>${name}</span>!`
+    ];
+
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+    document.getElementById("greetingName").innerHTML = randomGreeting;
+
     await loadDoseStrip();
   });
 });
