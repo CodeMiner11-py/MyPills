@@ -269,7 +269,7 @@ async function saveMedication() {
     showToast("Medication saved!");
     setTimeout(() => window.location = "app.html", 1200);
   } catch(e) {
-    showToast("Error: " + e.message, true);
+    showToast("(Turn off ad blockers, we don't have any ads) Error: " + e.message, true);
     btn.disabled = false;
     btn.textContent = "Save Medication";
   }

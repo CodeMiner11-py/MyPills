@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Medications – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+
+body{background:#f7f7f5;min-height:100vh;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+.logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-user{font-size:13px;color:#888;}
+.btn-logout{
+  background:transparent;color:#c0392b;border:1.5px solid #c0392b;
+  border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s ease;
+}
+.btn-logout:hover{background:#c0392b;color:#fff;}
+
+/* PAGE */
+.page{
+  max-width:700px;
+  margin:0 auto;
+  padding:48px 20px;
+  animation:fadeUp .45s ease both;
+}
+
+.page-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:32px;flex-wrap:wrap;gap:12px;
+}
+.page-header-left{}
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;color:#aaa;text-decoration:none;
+  margin-bottom:10px;
+  transition:color .2s;
+}
+.back-link:hover{color:#c0392b;}
+.page h1{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;}
+.page h1 span{color:#c0392b;}
+
+.add-btn{
+  background:#c0392b;color:#fff;border:none;
+  border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s ease;
+  box-shadow:0 4px 14px rgba(192,57,43,0.3);
+  text-decoration:none;display:inline-block;
+  white-space:nowrap;
+}
+.add-btn:hover{background:#a93226;transform:translateY(-1px);}
+
+/* LOADING / EMPTY */
+.state-msg{
+  text-align:center;padding:60px 20px;color:#bbb;font-size:0.95rem;
+}
+
+/* MED CARD */
+.med-card{
+  background:#fff;
+  border-radius:16px;
+  padding:24px;
+  margin-bottom:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.06);
+  border:1px solid rgba(0,0,0,0.04);
+  transition:box-shadow .2s;
+}
+.med-card:hover{box-shadow:0 8px 32px rgba(0,0,0,0.1);}
+
+.med-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:16px;gap:12px;
+}
+.med-name{font-size:1.1rem;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.med-meta{font-size:13px;color:#888;}
+.med-meta span{
+  display:inline-block;
+  background:#f2f2ef;
+  border-radius:6px;
+  padding:2px 8px;
+  margin-right:6px;
+  font-weight:500;
+}
+
+.view-btn{
+  background:transparent;color:#c0392b;
+  border:1.5px solid #c0392b;
+  border-radius:8px;padding:7px 14px;
+  font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s ease;
+  white-space:nowrap;flex-shrink:0;
+}
+.view-btn:hover{background:#c0392b;color:#fff;}
+
+/* PROGRESS BARS */
+.progress-section{margin-top:4px;}
+.progress-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:#aaa;font-weight:500;
+  margin-bottom:5px;margin-top:10px;
+}
+.progress-track{
+  width:100%;height:7px;
+  background:#f0f0ee;
+  border-radius:100px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;border-radius:100px;
+  transition:width .6s ease;
+}
+.fill-green{background:linear-gradient(90deg,#27ae60,#2ecc71);}
+.fill-yellow{background:linear-gradient(90deg,#f39c12,#f1c40f);}
+.fill-red{background:linear-gradient(90deg,#c0392b,#e74c3c);}
+
+/* MODAL */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.4);
+  backdrop-filter:blur(4px);
+  z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.modal-backdrop.open{opacity:1;pointer-events:all;}
+
+.modal{
+  background:#fff;
+  border-radius:20px;
+  padding:36px;
+  width:100%;max-width:480px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.15);
+  transform:translateY(20px) scale(0.97);
+  transition:transform .25s ease;
+  position:relative;
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-backdrop.open .modal{transform:translateY(0) scale(1);}
+
+.modal-close{
+  position:absolute;top:18px;right:20px;
+  background:none;border:none;font-size:20px;
+  color:#bbb;cursor:pointer;line-height:1;
+  transition:color .2s;
+}
+.modal-close:hover{color:#1a1a1a;}
+
+.modal h2{font-size:1.3rem;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.modal-subtitle{font-size:13px;color:#aaa;margin-bottom:24px;}
+
+.modal-row{
+  display:flex;gap:8px;align-items:flex-start;
+  padding:12px 0;
+  border-bottom:1px solid #f5f5f3;
+}
+.modal-row:last-child{border-bottom:none;}
+.modal-row-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.modal-row-body{}
+.modal-row-label{font-size:11px;font-weight:600;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;}
+.modal-row-value{font-size:14px;color:#1a1a1a;font-weight:500;}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <img src="pill.png"> MyPills
+  </a>
+  <div class="header-right">
+    <span class="header-user" id="userEmail"></span>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <a class="back-link" href="app.html">← Back to dashboard</a>
+      <h1>My <span>Medications</span></h1>
+    </div>
+    <a class="add-btn" href="new_medication.html">+ Add Medication</a>
+  </div>
+
+  <div id="medList"><div class="state-msg">Loading medications...</div></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <h2 id="modalName"></h2>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+    loadMedications(user.uid);
+  });
+});
+
+function toDate(val) {
+  if (!val) return null;
+  if (val.toDate) return val.toDate();
+  return new Date(val);
+}
+
+function fmt(date) {
+  if (!date) return "—";
+  return date.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
+}
+
+function pct(start, end) {
+  if (!start || !end) return null;
+  const now = Date.now();
+  const s = start.getTime(), e = end.getTime();
+  if (now >= e) return 100;
+  if (now <= s) return 0;
+  return Math.round(((now - s) / (e - s)) * 100);
+}
+
+function expiryPct(expiry) {
+  if (!expiry) return null;
+  // show progress toward expiry: 0% = just dispensed (assume 1 year shelf), 100% = expired
+  const now = Date.now();
+  const e = expiry.getTime();
+  const shelf = 365 * 24 * 60 * 60 * 1000;
+  const start = e - shelf;
+  if (now >= e) return 100;
+  if (now <= start) return 0;
+  return Math.round(((now - start) / shelf) * 100);
+}
+
+function scheduleText(schedule) {
+  if (!Array.isArray(schedule)) return schedule || "—";
+  const [count, unit] = schedule;
+  const u = unit.charAt(0) + unit.slice(1).toLowerCase();
+  return `${count}x ${u}`;
+}
+
+function dosageText(dosage) {
+  if (!Array.isArray(dosage)) return dosage || "—";
+  return `${dosage[0]} ${dosage[1]}`;
+}
+
+function barColor(p) {
+  return p >= 90 ? "fill-red" : "fill-green";
+}
+
+async function loadMedications(uid) {
+  const list = document.getElementById("medList");
+  try {
+    const snap = await getDocs(collection(db, "users", uid, "medications"));
+    if (snap.empty) {
+      list.innerHTML = `<div class="state-msg">No medications yet. <a href="new_medication.html" style="color:#c0392b;font-weight:600;">Add one →</a></div>`;
+      return;
+    }
+
+    list.innerHTML = "";
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const start   = toDate(d.startDate);
+      const stop    = toDate(d.stopDate);
+      const expiry  = toDate(d.expiryDate);
+      const coursePct  = pct(start, stop);
+      const expPct     = expiryPct(expiry);
+
+      const card = document.createElement("div");
+      card.className = "med-card";
+
+      let progressHTML = `<div class="progress-section">`;
+
+      if (coursePct !== null) {
+        progressHTML += `
+          <div class="progress-label"><span>Course progress</span><span>${coursePct}%</span></div>
+          <div class="progress-track"><div class="progress-fill ${barColor(coursePct)}" style="width:${coursePct}%"></div></div>`;
+      }
+
+      if (expPct !== null) {
+        const expColor = expPct >= 90 ? "fill-red" : "fill-yellow";
+        progressHTML += `
+          <div class="progress-label"><span>Expiry</span><span>${expPct}% of shelf life used</span></div>
+          <div class="progress-track"><div class="progress-fill ${expColor}" style="width:${expPct}%"></div></div>`;
+      }
+
+      progressHTML += `</div>`;
+
+      card.innerHTML = `
+        <div class="med-top">
+          <div>
+            <div class="med-name">${d.name}</div>
+            <div class="med-meta">
+              <span>💊 ${dosageText(d.dosage)}</span>
+              <span>🕐 ${scheduleText(d.schedule)}</span>
+            </div>
+          </div>
+          <button class="view-btn" onclick="openModal(${JSON.stringify(JSON.stringify(docSnap.id))})">View more</button>
+        </div>
+        ${progressHTML}
+      `;
+
+      // store data on window for modal access
+      window.__meds = window.__meds || {};
+      window.__meds[docSnap.id] = { ...d, start, stop, expiry };
+
+      list.appendChild(card);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="state-msg">Error loading medications: ${e.message}</div>`;
+  }
+}
+
+function openModal(idJson) {
+  const id = JSON.parse(idJson);
+  const d = window.__meds[id];
+  if (!d) return;
+
+  document.getElementById("modalName").textContent = d.name;
+  document.getElementById("modalSubtitle").textContent = `${dosageText(d.dosage)} · ${scheduleText(d.schedule)}`;
+
+  document.getElementById("modalBody").innerHTML = `
+    <div class="modal-row">
+      <div class="modal-row-icon">📅</div>
+      <div class="modal-row-body">
+        <div class="modal-row-label">Start Date</div>
+        <div class="modal-row-value">${fmt(d.start)}</div>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-icon">🏁</div>
+      <div class="modal-row-body">
+        <div class="modal-row-label">Stop Date</div>
+        <div class="modal-row-value">${fmt(d.stop)}</div>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-icon">⏳</div>
+      <div class="modal-row-body">
+        <div class="modal-row-label">Expiry Date</div>
+        <div class="modal-row-value">${fmt(d.expiry)}</div>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-icon">💊</div>
+      <div class="modal-row-body">
+        <div class="modal-row-label">Dosage</div>
+        <div class="modal-row-value">${dosageText(d.dosage)}</div>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-icon">🕐</div>
+      <div class="modal-row-body">
+        <div class="modal-row-label">Schedule</div>
+        <div class="modal-row-value">${scheduleText(d.schedule)}</div>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-icon">📝</div>
+      <div class="modal-row-body">
+        <div class="modal-row-label">Notes</div>
+        <div class="modal-row-value">${d.notes || "—"}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("modalBackdrop").classList.add("open");
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById("modalBackdrop")) {
+    document.getElementById("modalBackdrop").classList.remove("open");
+  }
+}
+
+function closeModalDirect() {
+  document.getElementById("modalBackdrop").classList.remove("open");
+}
+
+async function logout() {
+  await signOut(auth);
+  window.location = "index.html";
+}
+
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.closeModalDirect = closeModalDirect;
+window.logout = logout;
+</script>
+</body>
+</html>
