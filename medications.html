@@ -253,30 +253,13 @@ setPersistence(auth, browserLocalPersistence).then(() => {
   });
 });
 
-function toDate(val) {
-  if (!val) return null;
-  if (val.toDate) return val.toDate();
-  return new Date(val);
-}
-
-function fmt(date) {
-  if (!date) return "—";
-  return date.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
-}
+// --- HELPER FUNCTIONS ---
+const toDate = (val) => (!val ? null : (val.toDate ? val.toDate() : new Date(val)));
+const fmt = (date) => (!date ? "—" : date.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"}));
 
 function pct(start, end) {
   if (!start || !end) return null;
-  const now = Date.now();
-  const s = start.getTime(), e = end.getTime();
-  if (now >= e) return 100;
-  if (now <= s) return 0;
-  return Math.round(((now - s) / (e - s)) * 100);
-}
-
-function expiryPct(start, expiry) {
-  if (!start || !expiry) return null;
-  const now = Date.now();
-  const s = start.getTime(), e = expiry.getTime();
+  const now = Date.now(), s = start.getTime(), e = end.getTime();
   if (now >= e) return 100;
   if (now <= s) return 0;
   return Math.round(((now - s) / (e - s)) * 100);
@@ -284,9 +267,7 @@ function expiryPct(start, expiry) {
 
 function scheduleText(schedule) {
   if (!Array.isArray(schedule)) return schedule || "—";
-  const [count, unit] = schedule;
-  const u = unit.charAt(0) + unit.slice(1).toLowerCase();
-  return `${count}x ${u}`;
+  return `${schedule[0]}x ${schedule[1].charAt(0) + schedule[1].slice(1).toLowerCase()}`;
 }
 
 function dosageText(dosage) {
@@ -294,46 +275,38 @@ function dosageText(dosage) {
   return `${dosage[0]} ${dosage[1]}`;
 }
 
-function barColor(p) {
-  return p >= 90 ? "fill-red" : "fill-green";
-}
-
+// --- CORE LOGIC ---
 async function loadMedications(uid) {
   const list = document.getElementById("medList");
   try {
     const snap = await getDocs(collection(db, "users", uid, "medications"));
     if (snap.empty) {
-      list.innerHTML = `<div class="state-msg">No medications yet. <a href="new_medication.html" style="color:#c0392b;font-weight:600;">Add one →</a></div>`;
+      list.innerHTML = `<div class="state-msg">No medications yet. <a href="medication_add.html" style="color:#c0392b;font-weight:600;">Add one →</a></div>`;
       return;
     }
 
     list.innerHTML = "";
+    window.__meds = {}; // Reset storage
+
     snap.forEach(docSnap => {
       const d = docSnap.data();
-      const start   = toDate(d.startDate);
-      const stop    = toDate(d.stopDate);
-      const expiry  = toDate(d.expiryDate);
-      const coursePct  = pct(start, stop);
-      const expPct     = expiryPct(start, expiry);
+      const start = toDate(d.startDate);
+      const stop = toDate(d.stopDate);
+      const expiry = toDate(d.expiryDate);
+      const coursePct = pct(start, stop);
+      const expPct = pct(start, expiry);
+
+      window.__meds[docSnap.id] = { ...d, start, stop, expiry };
 
       const card = document.createElement("div");
       card.className = "med-card";
 
       let progressHTML = `<div class="progress-section">`;
-
       if (coursePct !== null) {
         progressHTML += `
           <div class="progress-label"><span>Course progress</span><span>${coursePct}%</span></div>
-          <div class="progress-track"><div class="progress-fill ${barColor(coursePct)}" style="width:${coursePct}%"></div></div>`;
+          <div class="progress-track"><div class="progress-fill ${coursePct >= 90 ? 'fill-red' : 'fill-green'}" style="width:${coursePct}%"></div></div>`;
       }
-
-      if (expPct !== null) {
-        const expColor = expPct >= 90 ? "fill-red" : "fill-yellow";
-        progressHTML += `
-          <div class="progress-label"><span>Expiry</span><span>${expPct}% of shelf life used</span></div>
-          <div class="progress-track"><div class="progress-fill ${expColor}" style="width:${expPct}%"></div></div>`;
-      }
-
       progressHTML += `</div>`;
 
       card.innerHTML = `
@@ -345,110 +318,46 @@ async function loadMedications(uid) {
               <span>🕐 ${scheduleText(d.schedule)}</span>
             </div>
           </div>
-          <button class="view-btn" onclick="openModal(${JSON.stringify(JSON.stringify(docSnap.id))})">View more</button>
+          <button class="view-btn" onclick="openModal('${docSnap.id}')">View more</button>
         </div>
         ${progressHTML}
       `;
-
-      // store data on window for modal access
-      window.__meds = window.__meds || {};
-      window.__meds[docSnap.id] = { ...d, start, stop, expiry };
-
       list.appendChild(card);
     });
   } catch(e) {
-    list.innerHTML = `<div class="state-msg">Error loading medications: ${e.message}</div>`;
+    list.innerHTML = `<div class="state-msg">Error: ${e.message}</div>`;
   }
 }
 
-function openModal(idJson) {
-  const id = JSON.parse(idJson);
+function openModal(id) {
   const d = window.__meds[id];
   if (!d) return;
 
   document.getElementById("modalName").textContent = d.name;
   document.getElementById("modalSubtitle").textContent = `${dosageText(d.dosage)} · ${scheduleText(d.schedule)}`;
-
   document.getElementById("modalBody").innerHTML = `
-    <div class="modal-row">
-      <div class="modal-row-icon">📅</div>
-      <div class="modal-row-body">
-        <div class="modal-row-label">Start Date</div>
-        <div class="modal-row-value">${fmt(d.start)}</div>
-      </div>
-    </div>
-    <div class="modal-row">
-      <div class="modal-row-icon">🏁</div>
-      <div class="modal-row-body">
-        <div class="modal-row-label">Stop Date</div>
-        <div class="modal-row-value">${fmt(d.stop)}</div>
-      </div>
-    </div>
-    <div class="modal-row">
-      <div class="modal-row-icon">⏳</div>
-      <div class="modal-row-body">
-        <div class="modal-row-label">Expiry Date</div>
-        <div class="modal-row-value">${fmt(d.expiry)}</div>
-      </div>
-    </div>
-    <div class="modal-row">
-      <div class="modal-row-icon">💊</div>
-      <div class="modal-row-body">
-        <div class="modal-row-label">Dosage</div>
-        <div class="modal-row-value">${dosageText(d.dosage)}</div>
-      </div>
-    </div>
-    <div class="modal-row">
-      <div class="modal-row-icon">🕐</div>
-      <div class="modal-row-body">
-        <div class="modal-row-label">Schedule</div>
-        <div class="modal-row-value">${scheduleText(d.schedule)}</div>
-      </div>
-    </div>
-    <div class="modal-row">
-      <div class="modal-row-icon">📝</div>
-      <div class="modal-row-body">
-        <div class="modal-row-label">Notes</div>
-        <div class="modal-row-value">${d.notes || "—"}</div>
-      </div>
-    </div>
+    <div class="modal-row"><div class="modal-row-icon">📅</div><div class="modal-row-body"><div class="modal-row-label">Start Date</div><div class="modal-row-value">${fmt(d.start)}</div></div></div>
+    <div class="modal-row"><div class="modal-row-icon">🏁</div><div class="modal-row-body"><div class="modal-row-label">Stop Date</div><div class="modal-row-value">${fmt(d.stop)}</div></div></div>
+    <div class="modal-row"><div class="modal-row-icon">⏳</div><div class="modal-row-body"><div class="modal-row-label">Expiry</div><div class="modal-row-value">${fmt(d.expiry)}</div></div></div>
+    <div class="modal-row"><div class="modal-row-icon">📝</div><div class="modal-row-body"><div class="modal-row-label">Notes</div><div class="modal-row-value">${d.notes || "—"}</div></div></div>
     <button class="delete-btn" onclick="deleteMed('${id}')">🗑 Delete Medication</button>
   `;
-
   document.getElementById("modalBackdrop").classList.add("open");
 }
 
-function closeModal(e) {
-  if (e.target === document.getElementById("modalBackdrop")) {
-    document.getElementById("modalBackdrop").classList.remove("open");
-  }
-}
-
-function closeModalDirect() {
-  document.getElementById("modalBackdrop").classList.remove("open");
-}
-
 async function deleteMed(id) {
-  if (!confirm("Delete this medication? This cannot be undone.")) return;
-  try {
-    await deleteDoc(doc(db, "users", currentUser.uid, "medications", id));
-    closeModalDirect();
-    loadMedications(currentUser.uid);
-  } catch(e) {
-    alert("Error deleting: " + e.message);
-  }
+  if (!confirm("Delete this medication?")) return;
+  await deleteDoc(doc(db, "users", currentUser.uid, "medications", id));
+  closeModalDirect();
+  loadMedications(currentUser.uid);
 }
 
-async function logout() {
-  await signOut(auth);
-  window.location = "index.html";
-}
-
+// --- GLOBAL EXPOSURE ---
 window.openModal = openModal;
-window.closeModal = closeModal;
-window.closeModalDirect = closeModalDirect;
 window.deleteMed = deleteMed;
-window.logout = logout;
+window.logout = async () => { await signOut(auth); window.location = "index.html"; };
+window.closeModalDirect = () => document.getElementById("modalBackdrop").classList.remove("open");
+window.closeModal = (e) => { if (e.target.id === "modalBackdrop") window.closeModalDirect(); };
 </script>
 </body>
 </html>
