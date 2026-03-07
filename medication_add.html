@@ -273,7 +273,7 @@ await setDoc(
   { initialized: true }
 );
     showToast("Medication saved!");
-    setTimeout(() => window.location = "app.html", 1200);
+    setTimeout(() => window.location = "medications.html", 1200);
   } catch(e) {
     showToast("(Turn off ad blockers, we don't have any ads) Error: " + e.message, true);
     btn.disabled = false;
