@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>404 – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:#f7f7f5;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.container{
+  text-align:center;
+  animation:fadeUp .5s ease both;
+  max-width:440px;
+  width:100%;
+}
+
+.pill-icon{
+  font-size:4rem;
+  margin-bottom:24px;
+  display:block;
+  animation:wobble 2s ease-in-out infinite;
+}
+
+.code{
+  font-size:6rem;
+  font-weight:700;
+  color:#c0392b;
+  letter-spacing:-0.04em;
+  line-height:1;
+  margin-bottom:8px;
+}
+
+.title{
+  font-size:1.3rem;
+  font-weight:600;
+  color:#1a1a1a;
+  margin-bottom:8px;
+}
+
+.subtitle{
+  font-size:0.95rem;
+  color:#aaa;
+  font-weight:400;
+  margin-bottom:40px;
+  line-height:1.6;
+}
+
+/* PROGRESS */
+.progress-wrap{
+  background:#fff;
+  border-radius:20px;
+  padding:24px 28px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.07);
+}
+
+.progress-label{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  font-weight:600;
+  color:#aaa;
+  margin-bottom:10px;
+}
+
+.progress-label span:last-child{
+  color:#c9a84c;
+}
+
+.progress-track{
+  width:100%;
+  height:10px;
+  background:#f0f0ee;
+  border-radius:100px;
+  overflow:hidden;
+  margin-bottom:16px;
+}
+
+.progress-fill{
+  height:100%;
+  border-radius:100px;
+  background:linear-gradient(90deg, #f39c12, #f1c40f);
+  width:0%;
+  transition:width 0.1s linear;
+  box-shadow:0 0 8px rgba(241,196,15,0.4);
+}
+
+.redirect-text{
+  font-size:12px;
+  color:#bbb;
+  text-align:center;
+}
+
+.redirect-text span{
+  color:#c0392b;
+  font-weight:600;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@keyframes wobble{
+  0%,100%{transform:rotate(-8deg);}
+  50%{transform:rotate(8deg);}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <span class="pill-icon">💊</span>
+  <div class="code">404</div>
+  <div class="title">Sorry, no medications here!</div>
+  <div class="subtitle">This page doesn't exist. We'll get you back on track in a moment.</div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Redirecting you...</span>
+      <span id="pctLabel">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="redirect-text">Taking you to <span id="destLabel">...</span></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const DURATION = 5000;
+const INTERVAL = 50;
+let elapsed = 0;
+let dest = "index.html";
+let destReady = false;
+
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, user => {
+    dest = user ? "app.html" : "index.html";
+    document.getElementById("destLabel").textContent = user ? "your dashboard" : "home";
+    destReady = true;
+  });
+});
+
+// start bar immediately, redirect when both bar done + auth resolved
+const fill = document.getElementById("progressFill");
+const label = document.getElementById("pctLabel");
+
+const timer = setInterval(() => {
+  elapsed += INTERVAL;
+  const pct = Math.min(Math.round((elapsed / DURATION) * 100), 100);
+  fill.style.width = pct + "%";
+  label.textContent = pct + "%";
+
+  if (elapsed >= DURATION) {
+    clearInterval(timer);
+    // wait for auth if not yet resolved
+    const go = () => window.location = dest;
+    destReady ? go() : setTimeout(go, 500);
+  }
+}, INTERVAL);
+</script>
+</body>
+</html>
