@@ -273,16 +273,13 @@ function pct(start, end) {
   return Math.round(((now - s) / (e - s)) * 100);
 }
 
-function expiryPct(expiry) {
-  if (!expiry) return null;
-  // show progress toward expiry: 0% = just dispensed (assume 1 year shelf), 100% = expired
+function expiryPct(start, expiry) {
+  if (!start || !expiry) return null;
   const now = Date.now();
-  const e = expiry.getTime();
-  const shelf = 365 * 24 * 60 * 60 * 1000;
-  const start = e - shelf;
+  const s = start.getTime(), e = expiry.getTime();
   if (now >= e) return 100;
-  if (now <= start) return 0;
-  return Math.round(((now - start) / shelf) * 100);
+  if (now <= s) return 0;
+  return Math.round(((now - s) / (e - s)) * 100);
 }
 
 function scheduleText(schedule) {
@@ -317,7 +314,7 @@ async function loadMedications(uid) {
       const stop    = toDate(d.stopDate);
       const expiry  = toDate(d.expiryDate);
       const coursePct  = pct(start, stop);
-      const expPct     = expiryPct(expiry);
+      const expPct     = expiryPct(start, expiry);
 
       const card = document.createElement("div");
       card.className = "med-card";
