@@ -210,7 +210,7 @@ header{
     <a class="add-btn" href="medication_add.html">+ Add Medication</a>
   </div>
 
-  <div id="medList"><div class="state-msg">Loading medications...</div></div>
+  <div id="medList"><div class="state-msg">📄 Loading your saved medications...</div></div>
 </div>
 
 <!-- MODAL -->
@@ -267,7 +267,7 @@ function pct(start, end) {
 
 function scheduleText(schedule) {
   if (!Array.isArray(schedule)) return schedule || "—";
-  return `${schedule[0]}x ${schedule[1].charAt(0) + schedule[1].slice(1).toLowerCase()}`;
+  return `${schedule[0]} time(s) ${schedule[1].charAt(0) + schedule[1].slice(1).toLowerCase()}`;
 }
 
 function dosageText(dosage) {
