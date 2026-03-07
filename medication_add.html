@@ -198,6 +198,7 @@ textarea{resize:vertical;min-height:90px;}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, Timestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -254,18 +255,24 @@ async function saveMedication() {
   btn.textContent = "Saving...";
 
   try {
-    await addDoc(
-      collection(db, "users", currentUser.uid, "medications"),
-      {
-        name,
-        dosage,
-        schedule,
-        startDate:  Timestamp.fromDate(new Date(startRaw)),
-        stopDate:   stopRaw  ? Timestamp.fromDate(new Date(stopRaw))  : null,
-        expiryDate: expRaw   ? Timestamp.fromDate(new Date(expRaw))   : null,
-        notes:      notes || ""
-      }
-    );
+    const docRef = await addDoc(
+  collection(db, "users", currentUser.uid, "medications"),
+  {
+    name,
+    dosage,
+    schedule,
+    startDate:  Timestamp.fromDate(new Date(startRaw)),
+    stopDate:   stopRaw  ? Timestamp.fromDate(new Date(stopRaw))  : null,
+    expiryDate: expRaw   ? Timestamp.fromDate(new Date(expRaw))   : null,
+    notes:      notes || ""
+  }
+);
+
+// create empty logs subcollection with a placeholder doc
+await setDoc(
+  doc(db, "users", currentUser.uid, "medications", docRef.id, "logs", "_init"),
+  { initialized: true }
+);
     showToast("Medication saved!");
     setTimeout(() => window.location = "app.html", 1200);
   } catch(e) {
