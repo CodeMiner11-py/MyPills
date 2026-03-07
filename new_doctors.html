@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>New Appointment – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+body{background:#f7f7f5;min-height:100vh;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;color:#1a1a1a;text-decoration:none;}
+.logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-user{font-size:13px;color:#888;}
+.btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:#c0392b;color:#fff;}
+
+.page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+.page-header{margin-bottom:32px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
+.back-link:hover{color:#c0392b;}
+.page h1{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;}
+.page h1 span{color:#c0392b;}
+.page-sub{font-size:0.9rem;color:#999;margin-top:6px;}
+
+.card{background:#fff;border-radius:20px;padding:36px;box-shadow:0 8px 40px rgba(0,0,0,0.07);}
+
+.form-group{margin-bottom:22px;position:relative;}
+label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:7px;}
+input,textarea,select{
+  width:100%;padding:11px 14px;
+  border:1.5px solid #e8e8e8;border-radius:10px;
+  font-size:14px;color:#1a1a1a;background:#fafafa;
+  transition:border-color .2s,box-shadow .2s;
+  outline:none;font-family:'Plus Jakarta Sans',sans-serif;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:#c0392b;
+  box-shadow:0 0 0 3px rgba(192,57,43,0.08);
+  background:#fff;
+}
+textarea{resize:vertical;min-height:90px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.optional-tag{font-size:11px;font-weight:400;color:#bbb;margin-left:6px;}
+
+/* ADDRESS AUTOCOMPLETE */
+.autocomplete-list{
+  position:absolute;top:100%;left:0;right:0;
+  background:#fff;
+  border:1.5px solid #e8e8e8;
+  border-top:none;
+  border-radius:0 0 10px 10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  z-index:200;
+  max-height:220px;overflow-y:auto;
+}
+.autocomplete-item{
+  padding:11px 14px;
+  font-size:13px;color:#1a1a1a;
+  cursor:pointer;
+  border-bottom:1px solid #f5f5f5;
+  line-height:1.4;
+}
+.autocomplete-item:last-child{border-bottom:none;}
+.autocomplete-item:hover{background:#fff0ef;color:#c0392b;}
+.autocomplete-item .addr-main{font-weight:600;}
+.autocomplete-item .addr-sub{font-size:11px;color:#aaa;margin-top:2px;}
+.autocomplete-spinner{padding:12px 14px;font-size:13px;color:#aaa;text-align:center;}
+
+.submit-btn{
+  width:100%;padding:14px;background:#c0392b;color:#fff;
+  border:none;border-radius:10px;font-size:15px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(192,57,43,0.3);margin-top:8px;
+}
+.submit-btn:hover{background:#a93226;transform:translateY(-1px);}
+.submit-btn:disabled{background:#e0a09a;cursor:not-allowed;transform:none;box-shadow:none;}
+
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .3s;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#c0392b;}
+.toast.success{background:#27ae60;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html"><img src="pill.png"> MyPills</a>
+  <div class="header-right">
+    <span class="header-user" id="userEmail"></span>
+    <button class="btn-logout" >Log Out</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-header">
+    <a class="back-link" href="app.html">← Back to dashboard</a>
+    <h1>New <span>Appointment</span></h1>
+    <p class="page-sub">Log an upcoming doctor visit.</p>
+  </div>
+
+  <div class="card">
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="title" placeholder="e.g. Annual Checkup">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Doctor</label>
+        <input type="text" id="doctor" placeholder="e.g. Dr. Smith">
+      </div>
+      <div class="form-group">
+        <label>Provider</label>
+        <input type="text" id="provider" placeholder="e.g. Kaiser, Sutter">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Date & Time</label>
+      <input type="datetime-local" id="datetime">
+    </div>
+
+    <div class="form-group" id="addressGroup">
+      <label>Address</label>
+      <input type="text" id="addressInput" placeholder="Start typing an address..." autocomplete="off">
+      <div class="autocomplete-list" id="autocompleteList" style="display:none;"></div>
+    </div>
+
+    <!-- Hidden field storing confirmed address -->
+    <input type="hidden" id="addressConfirmed">
+
+    <div class="form-group">
+      <label>Description <span class="optional-tag">optional</span></label>
+      <textarea id="description" placeholder="Any notes about this appointment..."></textarea>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" >Save Appointment</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+let searchTimeout = null;
+
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+  });
+});
+
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast " + type + " show";
+  setTimeout(() => t.className = "toast", 3000);
+}
+
+// ── Nominatim Address Autocomplete ─────────────────────────────────────────
+function onAddressInput() {
+  const val = document.getElementById("addressInput").value.trim();
+  document.getElementById("addressConfirmed").value = ""; // reset confirmed
+  clearTimeout(searchTimeout);
+  if (val.length < 3) { hideList(); return; }
+  showSpinner();
+  searchTimeout = setTimeout(() => searchAddress(val), 400);
+}
+
+function showSpinner() {
+  const list = document.getElementById("autocompleteList");
+  list.style.display = "block";
+  list.innerHTML = `<div class="autocomplete-spinner">Searching...</div>`;
+}
+
+function hideList() {
+  const list = document.getElementById("autocompleteList");
+  list.style.display = "none";
+  list.innerHTML = "";
+}
+
+async function searchAddress(query) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=6&countrycodes=us`;
+    const res = await fetch(url, {
+      headers: { "Accept-Language": "en", "User-Agent": "MyPills/1.0 mypills.kidslearninglab.com" }
+    });
+    const results = await res.json();
+    renderList(results);
+  } catch(e) {
+    hideList();
+  }
+}
+
+function renderList(results) {
+  const list = document.getElementById("autocompleteList");
+  if (results.length === 0) {
+    list.innerHTML = `<div class="autocomplete-spinner">No results found.</div>`;
+    list.style.display = "block";
+    return;
+  }
+
+  list.innerHTML = "";
+  list.style.display = "block";
+
+  for (const r of results) {
+    const addr = r.address || {};
+    const main = [addr.house_number, addr.road].filter(Boolean).join(" ") || r.display_name.split(",")[0];
+    const sub  = [addr.city || addr.town || addr.village, addr.state, addr.postcode].filter(Boolean).join(", ");
+    const full = r.display_name;
+
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.innerHTML = `<div class="addr-main">${main}</div><div class="addr-sub">${sub}</div>`;
+    item.onclick = () => selectAddress(full, main + (sub ? ", " + sub : ""));
+    list.appendChild(item);
+  }
+}
+
+function selectAddress(full, display) {
+  document.getElementById("addressInput").value = display;
+  document.getElementById("addressConfirmed").value = full;
+  hideList();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener("click", e => {
+  if (!document.getElementById("addressGroup").contains(e.target)) hideList();
+});
+
+// ── Save ───────────────────────────────────────────────────────────────────
+async function saveAppointment() {
+  const title       = document.getElementById("title").value.trim();
+  const doctor      = document.getElementById("doctor").value.trim();
+  const provider    = document.getElementById("provider").value.trim();
+  const datetimeVal = document.getElementById("datetime").value;
+  const address     = document.getElementById("addressInput").value.trim();
+  const description = document.getElementById("description").value.trim();
+
+  if (!title || !doctor || !datetimeVal || !address) {
+    showToast("Please fill in title, doctor, date/time, and address.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    await addDoc(collection(db, "users", currentUser.uid, "appts"), {
+      title,
+      doctor,
+      provider:    provider || "",
+      datetime:    Timestamp.fromDate(new Date(datetimeVal)),
+      address,
+      description: description || "",
+      createdAt:   Timestamp.now()
+    });
+    showToast("Appointment saved!", "success");
+    setTimeout(() => window.location = "app.html", 1200);
+  } catch(e) {
+    showToast("Error: " + e.message, "error");
+    btn.disabled = false;
+    btn.textContent = "Save Appointment";
+  }
+}
+
+async function logout() {
+  await signOut(auth);
+  window.location = "index.html";
+}
+
+document.getElementById("addressInput").addEventListener("input", onAddressInput);
+document.getElementById("submitBtn").addEventListener("click", saveAppointment);
+document.querySelectorAll(".btn-logout").forEach(b => b.addEventListener("click", logout));
+</script>
+</body>
+</html>
