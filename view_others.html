@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Caregiver Portal – MyPills</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f7f7f5;min-height:100vh;}
+
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 40px;background:rgba(255,255,255,0.75);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+  .logo img{height:36px;}
+  .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+
+  .page{max-width:700px;margin:0 auto;padding:40px 20px;animation:fadeUp .45s ease both;}
+  h1{font-size:1.7rem;margin-bottom:24px;}
+  h1 span{color:#c0392b;}
+
+  /* PATIENT SELECTOR */
+  .patient-grid { display: grid; gap: 12px; margin-top: 20px; }
+  .patient-card {
+    background: #fff; padding: 20px; border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    transition: transform 0.2s;
+  }
+  .patient-card:hover { transform: translateY(-2px); border: 1px solid #c0392b; }
+  .patient-info b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .patient-info span { font-size: 13px; color: #888; }
+
+  /* CALENDAR & DAY BOX (Matches your Calendar.html) */
+  .cal-card, .day-box { background:#fff; border-radius:20px; padding:28px; box-shadow:0 4px 20px rgba(0,0,0,0.06); margin-bottom:24px; }
+  .cal-header, .day-box-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-day-label { text-align:center; font-size:11px; font-weight:600; color:#bbb; text-transform:uppercase; padding:4px 0 8px; }
+  .cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:13px; cursor:pointer; position:relative; }
+  .cal-day.today { background:#c0392b; color:#fff; }
+  .cal-day.selected { outline:2px solid #c0392b; background:#fef0ef; color:#c0392b; }
+
+  .med-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f5f5f3; }
+  .med-row-name { font-size:14px; font-weight:600; }
+  .med-row-dose { font-size:12px; color:#aaa; }
+
+  /* Status Badges for Caregiver View */
+  .status-badge { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .status-taken { background: #e8f5e9; color: #2e7d32; }
+  .status-skipped { background: #ffebee; color: #c62828; }
+  .status-pending { background: #f5f5f5; color: #9e9e9e; }
+
+  .back-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 5px; }
+
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html"><img src="pill.png"> MyPills</a>
+  <button class="btn-logout" onclick="logout()">Log Out</button>
+</header>
+
+<div class="page" id="mainPage">
+  <div id="selectionView">
+    <h1>Caregiver <span>Dashboard</span></h1>
+    <p style="color:#666; margin-bottom:20px;">Select a patient to view their medication adherence.</p>
+    <div id="patientList" class="patient-grid">
+       <div class="state-msg">Searching for patients...</div>
+    </div>
+  </div>
+
+  <div id="calendarView" style="display:none;">
+    <button class="back-btn" onclick="showSelection()">← Back to Patients</button>
+    <h1 id="viewingTitle">Patient <span>Calendar</span></h1>
+
+    <div class="cal-card">
+      <div class="cal-header">
+        <div class="cal-month" id="calMonth"></div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="changeMonth(-1)">←</button>
+          <button onclick="changeMonth(1)">→</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="day-box">
+      <div class="day-box-header">
+        <div id="dayBoxDate" style="font-weight:700;"></div>
+      </div>
+      <div id="dayBoxContent"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9b4"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentPatientUid = null;
+let allMeds = [];
+let selectedDate = new Date();
+let calYear = selectedDate.getFullYear();
+let calMonth = selectedDate.getMonth();
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location = "login.html"; return; }
+  loadPatients(user.email);
+});
+
+async function loadPatients(myEmail) {
+  const q = query(collection(db, "users"), where("caregivers", "array-contains", myEmail.toLowerCase()));
+  const snap = await getDocs(q);
+  const list = document.getElementById("patientList");
+
+  if (snap.empty) {
+    list.innerHTML = `<div class="state-msg">No patients have shared access with you yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  snap.forEach(pDoc => {
+    const data = pDoc.data();
+    const card = document.createElement("div");
+    card.className = "patient-card";
+    card.onclick = () => selectPatient(pDoc.id, data.displayName || data.email);
+    card.innerHTML = `
+      <div class="patient-info">
+        <b>${data.displayName || 'Unnamed Patient'}</b>
+        <span>${data.email}</span>
+      </div>
+      <div style="color:#c0392b; font-weight:700;">View →</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function selectPatient(uid, name) {
+  currentPatientUid = uid;
+  document.getElementById("viewingTitle").innerHTML = `${name}'s <span>Calendar</span>`;
+  document.getElementById("selectionView").style.display = "none";
+  document.getElementById("calendarView").style.display = "block";
+
+  await loadMeds();
+  renderCalendar();
+  renderDayBox();
+}
+
+window.showSelection = () => {
+  document.getElementById("selectionView").style.display = "block";
+  document.getElementById("calendarView").style.display = "none";
+};
+
+async function loadMeds() {
+  const snap = await getDocs(collection(db, "users", currentPatientUid, "medications"));
+  allMeds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// Logic helpers from your Calendar.html
+const dateKey = (d) => `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
+const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+async function renderDayBox() {
+  const content = document.getElementById("dayBoxContent");
+  document.getElementById("dayBoxDate").textContent = selectedDate.toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+  content.innerHTML = "Loading...";
+
+  const WEEK_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  const dateMeds = allMeds.filter(med => {
+    const start = toD(med.startDate), stop = toD(med.stopDate), expiry = toD(med.expiryDate);
+    const end = (stop && expiry) ? (stop < expiry ? stop : expiry) : (stop || expiry || null);
+    const sel = stripTime(selectedDate);
+    if (start && sel < stripTime(start)) return false;
+    if (end && sel > stripTime(end)) return false;
+    return true;
+  });
+
+  const doseRows = [];
+  for (const med of dateMeds) {
+    const totalDoses = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
+    const unit = Array.isArray(med.schedule) ? med.schedule[1] : "DAILY";
+    const times = med.times || [];
+    for (let d = 1; d <= totalDoses; d++) {
+      const entry = times[d-1] || null;
+      let applies = true;
+      if (unit === "WEEKLY" && entry) applies = entry.day === WEEK_DAYS[selectedDate.getDay()];
+      if (unit === "MONTHLY" && entry) applies = parseInt(entry.day) === selectedDate.getDate();
+      if (applies) doseRows.push({ med, dose: d, totalDoses });
+    }
+  }
+
+  if (doseRows.length === 0) {
+    content.innerHTML = `<div class="state-msg">No medications scheduled.</div>`;
+    return;
+  }
+
+  content.innerHTML = "";
+  for (const { med, dose, totalDoses } of doseRows) {
+    // Fetch logs for this patient
+    const key = dateKey(selectedDate);
+    const logsRef = collection(db, "users", currentPatientUid, "medications", med.id, "logs");
+    const q = query(logsRef, where("day", "==", key), where("dose", "==", dose));
+    const logSnap = await getDocs(q);
+    const status = logSnap.empty ? "PENDING" : logSnap.docs[0].data().status;
+
+    const row = document.createElement("div");
+    row.className = "med-row";
+    row.innerHTML = `
+      <div class="med-row-info">
+        <div class="med-row-name">${med.name} ${totalDoses > 1 ? `(Dose ${dose})` : ''}</div>
+        <div class="med-row-dose">${Array.isArray(med.dosage) ? med.dosage.join(' ') : med.dosage}</div>
+      </div>
+      <span class="status-badge status-${status.toLowerCase()}">${status}</span>
+    `;
+    content.appendChild(row);
+  }
+}
+
+// Calendar Navigation logic
+function renderCalendar() {
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("calMonth").textContent = `${months[calMonth]} ${calYear}`;
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+  ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(l => {
+    const el = document.createElement("div"); el.className = "cal-day-label"; el.textContent = l; grid.appendChild(el);
+  });
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) grid.appendChild(Object.assign(document.createElement("div"), {className:"cal-day empty"}));
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const el = document.createElement("div"); el.className = "cal-day";
+    if (dateKey(date) === dateKey(new Date())) el.classList.add("today");
+    if (dateKey(date) === dateKey(selectedDate)) el.classList.add("selected");
+    el.textContent = d;
+    el.onclick = () => { selectedDate = date; renderCalendar(); renderDayBox(); };
+    grid.appendChild(el);
+  }
+}
+
+window.changeMonth = (dir) => {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; } else if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+};
+
+window.logout = () => signOut(auth).then(() => window.location = "index.html");
+</script>
+</body>
+</html>
