@@ -121,7 +121,7 @@ header{
   <img class="bg" src="bg.png">
   <div class="hero-overlay">
     <div class="hero-badge">Your medication companion</div>
-    <h1>Never miss a<br><span>dose</span> again.</h1>
+    <h1>Loading...</h1>
     <p>Track medications AND doctor's appointments, get timely reminders, and share with caregivers, all in one place.</p>
     <a class="hero-btn" href="continue.html" style="margin-bottom: 20px !important;">Sign up for free</a>
       <a class="hero-btn" href="view_export.html">Scan an export</a>
@@ -148,6 +148,52 @@ const auth = getAuth(app);
 onAuthStateChanged(auth, user => {
   if(user) window.location = "app.html";
 });
+const titles = [
+  "Never miss a dose again",
+  "Track your medications easily",
+  "Stay on top of your health",
+  "Reminders for every pill",
+  "Your personal medication assistant",
+  "Manage meds with confidence",
+  "Safe and simple medication tracking",
+  "Keep your health on schedule",
+  "Share your plan with caregivers",
+  "Smart reminders, better health"
+];
+
+const heroH1 = document.querySelector(".hero h1");
+let currentIndex = 0;
+
+const titles = [
+  "Never miss a dose again",
+  "Track your medications easily",
+  "Stay on top of your health",
+  "Reminders for every pill",
+  "Your personal medication assistant",
+  "Manage meds with confidence",
+  "Safe and simple medication tracking",
+  "Keep your health on schedule",
+  "Share your plan with caregivers",
+  "Smart reminders, better health"
+];
+
+const heroH1 = document.querySelector(".hero h1");
+
+// pick a random title
+const currentIndex = Math.floor(Math.random() * titles.length);
+
+function showTitle(index) {
+  const words = titles[index].split(" ");
+  const lastWord = words.pop(); // last word red
+  const middle = Math.floor(words.length / 2);
+  const firstHalf = words.slice(0, middle).join(" ");
+  const secondHalf = words.slice(middle).join(" ");
+  heroH1.innerHTML = firstHalf + '<br>' + secondHalf + ' <span>' + lastWord + '</span>';
+  heroH1.style.opacity = 1; // no fade needed here
+}
+
+// show random title on page load
+showTitle(currentIndex);
 </script>
 
 </body>
