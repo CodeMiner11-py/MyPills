@@ -338,7 +338,7 @@ async function loadMedications(uid) {
               <span>🕐 ${scheduleText(d.schedule)}</span>
             </div>
           </div>
-          <button class="view-btn" onclick="openModal(${JSON.stringify(JSON.stringify(docSnap.id))})">View more</button>
+<button class="view-btn" onclick="openModal('${docSnap.id}')">View more</button>
         </div>
         ${progressHTML}
       `;
@@ -354,8 +354,7 @@ async function loadMedications(uid) {
   }
 }
 
-function openModal(idJson) {
-  const id = JSON.parse(idJson);
+function openModal(id) {
   const d = window.__meds[id];
   if (!d) return;
 
