@@ -66,12 +66,39 @@
   }
   .caregiver-email{font-size:14px;font-weight:600;color:#1a1a1a;}
 
+  .caregiver-actions{display:flex;align-items:center;gap:8px;}
+
+  .msg-btn{
+    background:#fff0ef;color:#c0392b;border:1px solid #f0d0ce;
+    border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;
+    cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;
+  }
+  .msg-btn:hover{background:#c0392b;color:#fff;border-color:#c0392b;}
+
   .revoke-btn{
     background:transparent;color:#c0392b;border:1px solid #f0d0ce;
     border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;
     cursor:pointer;transition:all .2s;
   }
   .revoke-btn:hover{background:#fff0ef;border-color:#c0392b;}
+
+  /* ── Reason pills ── */
+  .reason-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .reason-pill{
+    padding:7px 16px;border-radius:100px;border:1.5px solid #eee;
+    font-size:13px;font-weight:600;color:#888;cursor:pointer;
+    background:#fafafa;transition:all .2s;user-select:none;
+  }
+  .reason-pill.selected{background:#fff0ef;border-color:#c0392b;color:#c0392b;}
+
+  .msg-textarea{
+    width:100%;padding:12px 16px;border:1.5px solid #eee;border-radius:12px;
+    font-size:14px;background:#fafafa;transition:all .2s;outline:none;
+    resize:vertical;min-height:100px;font-family:'Plus Jakarta Sans',sans-serif;
+    color:#1a1a1a;line-height:1.6;
+  }
+  .msg-textarea:focus{border-color:#c0392b;background:#fff;box-shadow:0 0 0 4px rgba(192,57,43,0.05);}
+  .msg-textarea::placeholder{color:#ccc;}
 
   /* ── Modal overlay ── */
   .modal-overlay{
@@ -99,9 +126,7 @@
     background:#fffbeb;border:1.5px solid #f6d860;
     border-radius:14px;padding:14px 16px;margin-bottom:24px;
   }
-  .modal-warning-icon{
-    flex-shrink:0;width:22px;height:22px;margin-top:1px;
-  }
+  .modal-warning-icon{flex-shrink:0;width:22px;height:22px;margin-top:1px;}
   .modal-warning-text{font-size:13px;color:#7a5c00;line-height:1.55;font-weight:500;}
 
   .modal-email-highlight{
@@ -124,8 +149,11 @@
     box-shadow:0 4px 12px rgba(192,57,43,0.2);
   }
   .modal-confirm:hover{transform:translateY(-1px);}
+  .modal-confirm:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
   .modal-confirm.revoke-confirm{background:#1a1a1a;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
   .modal-confirm.revoke-confirm:hover{background:#333;}
+
+  .modal-label{font-size:13px;font-weight:600;color:#444;margin-bottom:8px;display:block;}
 
   .toast{
     position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);
@@ -135,6 +163,7 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .toast.error{background:#c0392b;}
+  .toast.success{background:#27ae60;}
 
   @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 </style>
@@ -210,6 +239,29 @@
   </div>
 </div>
 
+<!-- Send Message Modal -->
+<div class="modal-overlay" id="msgModal">
+  <div class="modal">
+    <div class="modal-title">💬 Send a Message</div>
+    <div class="modal-email-highlight">Sending to: <strong id="msgEmailDisplay"></strong></div>
+
+    <span class="modal-label">Reason</span>
+    <div class="reason-pills" id="reasonPills">
+      <div class="reason-pill" data-reason="Refill">💊 Refill</div>
+      <div class="reason-pill" data-reason="Question">❓ Question</div>
+      <div class="reason-pill" data-reason="Comment">💬 Comment</div>
+    </div>
+
+    <span class="modal-label" style="margin-bottom:8px;">Message</span>
+    <textarea class="msg-textarea" id="msgBody" placeholder="Write your message here…"></textarea>
+
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="modal-cancel" id="msgCancelBtn">Cancel</button>
+      <button class="modal-confirm" id="msgSendBtn">Send Message</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -232,12 +284,14 @@ const db = getFirestore(app);
 
 let pendingGrantEmail = null;
 let pendingRevokeEmail = null;
+let pendingMsgEmail = null;
+let selectedReason = null;
 
-function showToast(msg, isError = false) {
+function showToast(msg, type = "") {
   const t = document.getElementById("toast");
   t.textContent = msg;
-  t.className = isError ? "toast show error" : "toast show";
-  setTimeout(() => t.classList.remove("show"), 3000);
+  t.className = "toast show" + (type ? " " + type : "");
+  setTimeout(() => t.classList.remove("show"), 3500);
 }
 
 function openModal(id) { document.getElementById(id).classList.add("open"); }
@@ -248,18 +302,40 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove("open"); });
 });
 
+// Reason pill selection
+document.getElementById("reasonPills").addEventListener("click", e => {
+  const pill = e.target.closest(".reason-pill");
+  if (!pill) return;
+  document.querySelectorAll(".reason-pill").forEach(p => p.classList.remove("selected"));
+  pill.classList.add("selected");
+  selectedReason = pill.dataset.reason;
+});
+
 // Header buttons
 document.getElementById("logoutBtn").addEventListener("click", () =>
   signOut(auth).then(() => window.location.href = "index.html")
 );
 document.getElementById("grantCancelBtn").addEventListener("click", () => closeModal("grantModal"));
 document.getElementById("revokeCancelBtn").addEventListener("click", () => closeModal("revokeModal"));
+document.getElementById("msgCancelBtn").addEventListener("click", () => {
+  closeModal("msgModal");
+  resetMsgModal();
+});
+
+function resetMsgModal() {
+  document.getElementById("msgBody").value = "";
+  document.querySelectorAll(".reason-pill").forEach(p => p.classList.remove("selected"));
+  selectedReason = null;
+  const btn = document.getElementById("msgSendBtn");
+  btn.disabled = false;
+  btn.textContent = "Send Message";
+}
 
 // Grant button
 document.getElementById("submitBtn").addEventListener("click", () => {
   const emailInp = document.getElementById("caregiverEmail");
   const email = emailInp.value.trim().toLowerCase();
-  if (!email.includes('@')) return showToast("Enter a valid email", true);
+  if (!email.includes('@')) return showToast("Enter a valid email", "error");
   pendingGrantEmail = email;
   document.getElementById("grantEmailDisplay").textContent = email;
   openModal("grantModal");
@@ -278,10 +354,10 @@ document.getElementById("grantConfirmBtn").addEventListener("click", async () =>
       displayName: user.displayName || user.email.split('@')[0],
       caregivers: arrayUnion(email)
     });
-    showToast(`Access granted to ${email}`);
+    showToast(`Access granted to ${email}`, "success");
     document.getElementById("caregiverEmail").value = "";
   } catch (e) {
-    showToast("Error granting access", true);
+    showToast("Error granting access", "error");
   } finally {
     btn.disabled = false; btn.textContent = "Grant Access";
     pendingGrantEmail = null;
@@ -300,10 +376,46 @@ document.getElementById("revokeConfirmBtn").addEventListener("click", async () =
     await updateDoc(doc(db, "users", user.uid), { caregivers: arrayRemove(email) });
     showToast("Access revoked");
   } catch (e) {
-    showToast("Error revoking access", true);
+    showToast("Error revoking access", "error");
   } finally {
     btn.disabled = false; btn.textContent = "Remove Access";
     pendingRevokeEmail = null;
+  }
+});
+
+// Send message
+document.getElementById("msgSendBtn").addEventListener("click", async () => {
+  const message = document.getElementById("msgBody").value.trim();
+  if (!selectedReason) return showToast("Please select a reason", "error");
+  if (!message) return showToast("Please enter a message", "error");
+
+  const btn = document.getElementById("msgSendBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+
+  const user = auth.currentUser;
+  const senderName = user.displayName || user.email.split('@')[0];
+  const fullMessage = `[${selectedReason}]\n\n${message}`;
+
+  try {
+    const res = await fetch("https://api.mypills.kidslearninglab.com/noter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: pendingMsgEmail,
+        message: fullMessage,
+        from_name: senderName
+      })
+    });
+
+    if (!res.ok) throw new Error("Server error");
+
+    closeModal("msgModal");
+    resetMsgModal();
+    showToast("Message sent! 💬", "success");
+  } catch (e) {
+    showToast("Failed to send message", "error");
+    btn.disabled = false;
+    btn.textContent = "Send Message";
   }
 });
 
@@ -329,9 +441,21 @@ function setupRealtimeList(uid) {
           <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
           <div class="caregiver-email">${email}</div>
         </div>
-        <button class="revoke-btn" data-email="${email}">Revoke</button>
+        <div class="caregiver-actions">
+          <button class="msg-btn" data-email="${email}">💬 Message</button>
+          <button class="revoke-btn" data-email="${email}">Revoke</button>
+        </div>
       </div>
     `).join('');
+
+    listDiv.querySelectorAll('.msg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pendingMsgEmail = btn.dataset.email;
+        document.getElementById("msgEmailDisplay").textContent = pendingMsgEmail;
+        resetMsgModal();
+        openModal("msgModal");
+      });
+    });
 
     listDiv.querySelectorAll('.revoke-btn').forEach(btn => {
       btn.addEventListener('click', () => {
