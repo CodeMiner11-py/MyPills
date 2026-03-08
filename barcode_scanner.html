@@ -419,6 +419,9 @@
         <button class="action-btn primary" onclick="addToMedications()">
           <span class="material-symbols-outlined">add_circle</span> Add to My Medications
         </button>
+        <button class="action-btn ghost" onclick="copyShareLink()" id="share-btn">
+          <span class="material-symbols-outlined">link</span> Copy Share Link
+        </button>
         <button class="action-btn ghost" onclick="scanAgain()">
           <span class="material-symbols-outlined">refresh</span> Scan Again
         </button>
@@ -1031,6 +1034,88 @@ window.scanAgain = function() {
   hideResult();
   document.getElementById("ndc-input").value = "";
 };
+
+window.copyShareLink = function() {
+  if (!lastResult) return;
+  const d = lastResult;
+
+  // Build a shareable URL with all the drug info as params so the
+  // recipient lands on barcode_scanner.html with the result pre-populated.
+  const params = new URLSearchParams();
+  params.set("shared",   "1");
+  if (d.brand)    params.set("brand",    d.brand);
+  if (d.generic)  params.set("generic",  d.generic);
+  if (d.ndc)      params.set("ndc",      d.ndc);
+  if (d.strength) params.set("strength", d.strength);
+  if (d.form)     params.set("form",     d.form);
+  if (d.route)    params.set("route",    d.route);
+  if (d.type)     params.set("type",     d.type);
+  if (d.mfr)      params.set("mfr",      d.mfr);
+  if (d.rxcui)    params.set("rxcui",    d.rxcui);
+  if (d.source)   params.set("source",   d.source);
+  if (d.fullName) params.set("fullName", d.fullName);
+
+  const url = `${location.origin}${location.pathname}?${params.toString()}`;
+
+  // Use native share sheet on mobile, clipboard fallback on desktop
+  if (navigator.share) {
+    navigator.share({
+      title: `${d.brand || d.generic || "Medication"} — MyPills`,
+      text:  `Check out this medication info: ${d.brand || d.generic}${d.strength ? " " + d.strength : ""}`,
+      url
+    }).catch(() => {}); // user cancelled — do nothing
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      // Visual feedback: swap button icon+text briefly
+      const btn = document.getElementById("share-btn");
+      btn.innerHTML = '<span class="material-symbols-outlined">check</span> Link Copied!';
+      btn.style.borderColor = "#27ae60";
+      btn.style.color = "#27ae60";
+      setTimeout(() => {
+        btn.innerHTML = '<span class="material-symbols-outlined">link</span> Copy Share Link';
+        btn.style.borderColor = "";
+        btn.style.color = "";
+      }, 2500);
+      showToast("Share link copied to clipboard!", "success");
+    }).catch(() => {
+      // Clipboard blocked — show the URL in a toast so user can copy manually
+      showToast("Copy this link: " + url, "error");
+    });
+  }
+};
+
+// ── On load: if ?shared=1, auto-populate result from URL params ───
+(function checkSharedResult() {
+  const p = new URLSearchParams(location.search);
+  if (p.get("shared") !== "1") return;
+
+  const brand    = p.get("brand")    || "";
+  const generic  = p.get("generic")  || "";
+  const ndc      = p.get("ndc")      || "";
+  const strength = p.get("strength") || "";
+  const form     = p.get("form")     || "";
+  const route    = p.get("route")    || "";
+  const type     = p.get("type")     || "";
+  const mfr      = p.get("mfr")      || "";
+  const rxcui    = p.get("rxcui")    || "";
+  const source   = p.get("source")   || "";
+  const fullName = p.get("fullName") || "";
+
+  if (!brand && !generic) return; // nothing useful
+
+  lastResult = { brand, generic, ndc, strength, form, route,
+                 type, mfr, rxcui, source, fullName };
+
+  // Pre-fill the NDC input so it looks like a real scan
+  const inp = document.getElementById("ndc-input");
+  if (inp && ndc) { inp.value = ndc; switchTab("manual"); }
+
+  // Show the result card directly
+  displayResult(lastResult, ndc || brand);
+
+  // Show a subtle banner so recipient knows this was shared
+  showToast(`Shared result: ${brand || generic}`, "success");
+})();
 
 // ─── UI HELPERS ──────────────────────────────────────────────────
 function showLoading(show) {
