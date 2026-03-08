@@ -270,7 +270,7 @@
 <div class="page">
 
   <div class="page-title">Scan Medication</div>
-  <div class="page-sub">Scan a barcode, upload a photo, or enter an NDC code to look up drug information.</div>
+  <div class="page-sub">Scan a barcode, upload a photo, or enter an NDC code — powered by RxNav/RxNorm (NIH).</div>
 
   <!-- TABS -->
   <div class="tabs">
@@ -354,7 +354,7 @@
       </div>
       <p style="font-size:12px;color:#bbb;line-height:1.6;">
         Enter the 10 or 11-digit National Drug Code (NDC) found on the medication label.
-        Hyphens are optional — both <em>0071-0155-23</em> and <em>00710155230</em> are accepted.
+        Hyphens are optional. Data is sourced from <strong style="color:#aaa;">RxNav / RxNorm (NIH/NLM)</strong> — free, no API key required.
       </p>
     </div>
   </div>
@@ -397,7 +397,7 @@
           <div class="result-field-val" id="res-route">—</div>
         </div>
         <div class="result-field">
-          <div class="result-field-label">Manufacturer</div>
+          <div class="result-field-label" data-field="mfr-label">RxCUI</div>
           <div class="result-field-val" id="res-mfr">—</div>
         </div>
         <div class="result-field">
@@ -584,10 +584,13 @@ window.scanUploadedImage = function() {
   });
 };
 
-// ─── NDC LOOKUP ──────────────────────────────────────────────────
+// ─── RXNAV / RXNORM LOOKUP ───────────────────────────────────────
+// Flow: NDC/UPC → RXCUI (RxNorm) → drug name + properties → NDC details (RxNav)
+const RXNAV = "https://rxnav.nlm.nih.gov/REST";
+
 window.lookupNDC = function() {
   const raw = document.getElementById("ndc-input").value.trim();
-  if (!raw) { showToast("Please enter an NDC code.", "error"); return; }
+  if (!raw) { showToast("Please enter an NDC or UPC code.", "error"); return; }
   lookupNDCCode(raw);
 };
 
@@ -595,74 +598,122 @@ window.lookupNDCCode = async function(raw) {
   hideResult();
   showLoading(true);
 
-  const clean = raw.replace(/[^0-9]/g, "");
+  // Normalize: strip non-digits for UPC/NDC matching
+  const digits = raw.replace(/[^0-9]/g, "");
 
-  // Try multiple query strategies
-  const queries = [
-    `product_ndc:"${raw}"`,
-    `product_ndc:"${clean}"`,
-    `package_ndc:"${raw}"`,
-    `package_ndc:"${clean}"`,
-  ];
+  try {
+    // ── Step 1: NDC → RXCUI ──────────────────────────────────────
+    let rxcui = null;
 
-  let found = null;
-  for (const q of queries) {
-    try {
-      const url = `https://api.fda.gov/drug/ndc.json?search=${encodeURIComponent(q)}&limit=1`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.results && data.results.length > 0) { found = data.results[0]; break; }
+    // Try the 11-digit NDC first, then the raw string
+    const ndcCandidates = [digits, raw];
+    for (const ndc of ndcCandidates) {
+      const r = await fetch(`${RXNAV}/rxcui.json?idtype=NDC&id=${encodeURIComponent(ndc)}`);
+      if (r.ok) {
+        const j = await r.json();
+        rxcui = j?.idGroup?.rxnormId?.[0] || null;
+        if (rxcui) break;
       }
-    } catch(e) {}
+    }
+
+    // If barcode was UPC (12 digits), try stripping the check digit → 11-digit NDC
+    if (!rxcui && digits.length === 12) {
+      const asNDC = digits.slice(0, 11);
+      const r = await fetch(`${RXNAV}/rxcui.json?idtype=NDC&id=${asNDC}`);
+      if (r.ok) {
+        const j = await r.json();
+        rxcui = j?.idGroup?.rxnormId?.[0] || null;
+      }
+    }
+
+    if (!rxcui) {
+      showLoading(false);
+      showError("Medication not found.", "No RxNorm entry matched that NDC/UPC. Try entering the 10- or 11-digit NDC printed on the label.");
+      return;
+    }
+
+    // ── Step 2: RXCUI → Drug name & properties ───────────────────
+    const [propRes, relRes, ndcRes] = await Promise.all([
+      fetch(`${RXNAV}/rxcui/${rxcui}/properties.json`),
+      fetch(`${RXNAV}/rxcui/${rxcui}/related.json?tty=IN+BN+MIN+BPCK+GPCK+SBD+SCD`),
+      fetch(`${RXNAV}/rxcui/${rxcui}/ndcs.json`)
+    ]);
+
+    const propData  = propRes.ok  ? await propRes.json()  : null;
+    const relData   = relRes.ok   ? await relRes.json()   : null;
+    const ndcData   = ndcRes.ok   ? await ndcRes.json()   : null;
+
+    const props     = propData?.properties || {};
+    const relGroups = relData?.relatedGroup?.conceptGroup || [];
+    const allNDCs   = ndcData?.ndcGroup?.ndcList?.ndc || [];
+
+    // Extract brand name (tty=BN) and ingredient (tty=IN)
+    const byTTY = (tty) => relGroups.find(g => g.tty === tty)?.conceptProperties?.[0]?.name || null;
+    const brand   = byTTY("BN") || props.name || "Unknown";
+    const generic = byTTY("IN") || props.synonym || "";
+
+    // ── Step 3: Get detailed package info from RxNav NDC API ─────
+    const canonicalNDC = allNDCs[0] || digits;
+    let detail = null;
+    const detailRes = await fetch(`${RXNAV}/ndcstatus.json?ndc=${encodeURIComponent(canonicalNDC)}`);
+    if (detailRes.ok) detail = await detailRes.json();
+
+    // ── Step 4: Get strength/form from SBD or SCD concept ────────
+    const sbdConcept = relGroups.find(g => g.tty === "SBD")?.conceptProperties?.[0];
+    const scdConcept = relGroups.find(g => g.tty === "SCD")?.conceptProperties?.[0];
+    const fullName   = sbdConcept?.name || scdConcept?.name || props.name || "";
+
+    // Parse strength and form from the full name string
+    // e.g. "Atorvastatin 20 MG Oral Tablet [Lipitor]"
+    const strengthMatch = fullName.match(/(\d[\d.,]*\s*(?:MG|MCG|ML|IU|MEQ|%)[^\s]*)/i);
+    const formMatch     = fullName.match(/\b(Tablet|Capsule|Solution|Suspension|Cream|Gel|Patch|Injection|Spray|Drops|Syrup|Powder|Ointment|Lozenge|Film|Suppository)\b/i);
+    const routeMatch    = fullName.match(/\b(Oral|Topical|Intravenous|Sublingual|Nasal|Ophthalmic|Otic|Rectal|Vaginal|Inhalation|Transdermal)\b/i);
+
+    showLoading(false);
+    displayResult({
+      brand,
+      generic,
+      rxcui,
+      ndc: canonicalNDC,
+      fullName,
+      strength:  strengthMatch?.[1] || null,
+      form:      formMatch?.[1]     || null,
+      route:     routeMatch?.[1]    || null,
+      ndcStatus: detail?.ndcStatus?.status || null,
+      allNDCs:   allNDCs.slice(0, 5)
+    }, raw);
+
+  } catch(e) {
+    showLoading(false);
+    showError("Lookup failed.", "Could not reach RxNav. Check your internet connection and try again.");
   }
-
-  showLoading(false);
-
-  if (!found) {
-    showError("No medication found for that code.", "Check that the NDC is correct. Some newer or generic products may not be in the OpenFDA database.");
-    return;
-  }
-
-  displayResult(found, raw);
 };
 
 function displayResult(d, rawCode) {
   lastResult = d;
 
-  const val = (v, arr) => {
-    const source = arr ? d[arr] : d;
-    if (!source) return null;
-    const x = arr ? source : v;
-    if (typeof x === "string") return x || null;
-    if (Array.isArray(x)) return x[0] || null;
-    return null;
-  };
-
-  const brand = (d.brand_name || "").trim();
-  const generic = (d.generic_name || "").trim();
-  document.getElementById("res-brand").textContent = brand || generic || "Unknown Medication";
-  document.getElementById("res-generic").textContent = generic && generic !== brand ? generic : (d.product_type || "");
-  document.getElementById("res-ndc").textContent = d.product_ndc || rawCode;
+  document.getElementById("res-brand").textContent   = d.brand || "Unknown Medication";
+  document.getElementById("res-generic").textContent = d.generic || d.fullName || "";
+  document.getElementById("res-ndc").textContent     = d.ndc || rawCode;
 
   const setField = (id, v) => {
     const el = document.getElementById(id);
     if (v) { el.textContent = v; el.className = "result-field-val"; }
-    else { el.textContent = "Not available"; el.className = "result-field-val missing"; }
+    else   { el.textContent = "Not available"; el.className = "result-field-val missing"; }
   };
 
-  setField("res-form",     d.dosage_form);
-  setField("res-route",    Array.isArray(d.route) ? d.route.join(", ") : d.route);
-  setField("res-mfr",      d.labeler_name || d.manufacturer_name);
-  setField("res-type",     d.product_type);
+  setField("res-form",     d.form);
+  setField("res-route",    d.route);
+  setField("res-mfr",      null);   // RxNorm doesn't provide manufacturer — field shows N/A gracefully
+  setField("res-type",     d.ndcStatus || "Prescription / OTC");
+  setField("res-strength", d.strength);
+  setField("res-package",  d.fullName || null);
 
-  const strength = d.active_ingredients
-    ? d.active_ingredients.map(i => `${i.name} ${i.strength}`).join(", ")
-    : null;
-  setField("res-strength", strength);
-
-  const pkg = d.packaging ? d.packaging[0]?.description : null;
-  setField("res-package", pkg);
+  // Swap "Manufacturer" label to "RxCUI" since we have that
+  document.querySelector('[data-field="mfr-label"]') &&
+    (document.querySelector('[data-field="mfr-label"]').textContent = "RxCUI");
+  const mfrEl = document.getElementById("res-mfr");
+  if (d.rxcui) { mfrEl.textContent = d.rxcui; mfrEl.className = "result-field-val"; }
 
   document.getElementById("result-card").style.display = "block";
   document.getElementById("result-card").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -671,20 +722,12 @@ function displayResult(d, rawCode) {
 // ─── ADD TO MEDICATIONS ──────────────────────────────────────────
 window.addToMedications = async function() {
   if (!lastResult || !currentUser) return;
-  const brand = lastResult.brand_name || lastResult.generic_name || "Unknown";
-  const generic = lastResult.generic_name || "";
-  const form = lastResult.dosage_form || "";
-  const strength = lastResult.active_ingredients
-    ? lastResult.active_ingredients.map(i => `${i.name} ${i.strength}`).join(", ")
-    : "";
-
-  // Build URL params to pre-fill the new medication form
   const params = new URLSearchParams({
-    name: brand,
-    generic: generic,
-    form: form,
-    strength: strength,
-    ndc: lastResult.product_ndc || ""
+    name:     lastResult.brand   || "",
+    generic:  lastResult.generic || "",
+    form:     lastResult.form    || "",
+    strength: lastResult.strength|| "",
+    ndc:      lastResult.ndc     || ""
   });
   window.location = "new_medication.html?" + params.toString();
 };
