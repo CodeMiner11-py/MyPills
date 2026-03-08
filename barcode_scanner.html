@@ -10,7 +10,7 @@
     *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
     body{background:#f7f7f5;min-height:100vh;padding:48px 20px;}
 
-    /* HEADER - EXACT SAME AS PROVIDED */
+    /* HEADER - EXACT SAME AS DASHBOARD */
     header{
       display:flex;align-items:center;justify-content:space-between;
       padding:18px 40px;
@@ -26,14 +26,16 @@
     .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
     .btn-logout:hover{background:#c0392b;color:#fff;}
 
-    /* PAGE STYLING */
+    /* PAGE */
+    .page{margin-top:32px;}
     #scanner{width:100%;max-width:480px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);}
     #results{margin-top:24px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.06);}
     .label{font-weight:700;color:#c0392b;margin-top:10px;}
     .value{margin-bottom:8px;color:#1a1a1a;}
     .info-row{margin-bottom:6px;}
-    button.scan-btn{background:#c0392b;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;margin-top:16px;}
+    button.scan-btn{background:#c0392b;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;margin-top:16px;margin-right:10px;}
     button.scan-btn:hover{background:#a93226;}
+    input#uploadImage{margin-top:16px;}
     </style>
 </head>
 <body>
@@ -48,7 +50,8 @@
 
 <div class="page">
     <div id="scanner"></div>
-    <button class="scan-btn" id="startScan">Start Scanning</button>
+    <button class="scan-btn" id="startScan">Start Camera Scan</button>
+    <input type="file" accept="image/*" id="uploadImage">
 
     <div id="results" style="display:none;">
         <div class="info-row"><span class="label">Brand Name:</span> <span class="value" id="brandName">-</span></div>
@@ -85,14 +88,10 @@ setPersistence(auth, browserLocalPersistence).then(() => {
 function logout(){ signOut(auth).then(()=>{ window.location="index.html"; }); }
 window.logout = logout;
 
+// CAMERA SCAN
 document.getElementById("startScan").addEventListener("click", ()=>{
     Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#scanner'),
-            constraints: { facingMode: "environment" }
-        },
+        inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#scanner'), constraints: { facingMode: "environment" } },
         decoder: { readers: ["upc_reader","ean_reader"] },
         locate: true
     }, function(err){
@@ -105,6 +104,24 @@ document.getElementById("startScan").addEventListener("click", ()=>{
         Quagga.stop();
         fetchMedicationInfo(code);
     });
+});
+
+// IMAGE UPLOAD SCAN
+document.getElementById("uploadImage").addEventListener("change", (event)=>{
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+        Quagga.decodeSingle({
+            src: e.target.result,
+            numOfWorkers: 0,
+            decoder: { readers: ["upc_reader","ean_reader"] }
+        }, function(result){
+            if(result && result.codeResult) fetchMedicationInfo(result.codeResult.code);
+            else alert("Barcode not detected in image");
+        });
+    };
+    reader.readAsDataURL(file);
 });
 
 async function fetchMedicationInfo(barcode){
