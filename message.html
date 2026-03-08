@@ -136,22 +136,30 @@ setPersistence(auth, browserLocalPersistence).then(()=>{
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location="index.html"));
 
 async function startChat(user,targetEmail){
-  const chatHeader = document.getElementById("chatHeader");
-  chatHeader.textContent = "Chat with " + targetEmail;
-
   const chatBox = document.getElementById("chatBox");
-  const inputDiv = document.querySelector(".msg-input");
   chatBox.style.display="block";
+
+  const inputDiv = document.querySelector(".msg-input");
   inputDiv.style.display="flex";
 
   const sanitize = s=>s.replace(/[@.]/g,"_");
-  const option1 = user.uid+"_"+sanitize(targetEmail);
-  const option2 = sanitize(targetEmail)+"_"+user.uid;
+  const targetId = sanitize(targetEmail);
 
-  // Always pick option1 as chatId for simplicity
-  currentChatId = option1;
+  const option1 = user.uid+"_"+targetId;
+  const option2 = targetId+"_"+user.uid;
 
-  const messagesRef = collection(db,"messages",currentChatId,"messages");
+  let chatId;
+
+  const doc1 = await getDoc(doc(db,"messages",option1));
+  const doc2 = await getDoc(doc(db,"messages",option2));
+
+  if(doc1.exists()) chatId = option1;
+  else if(doc2.exists()) chatId = option2;
+  else chatId = option1; // create new chat if none exists
+
+  currentChatId = chatId;
+
+  const messagesRef = collection(db,"messages",chatId,"messages");
   const q = query(messagesRef,orderBy("timestamp"));
 
   onSnapshot(q,snapshot=>{
@@ -163,23 +171,23 @@ async function startChat(user,targetEmail){
       div.textContent = m.text;
       chatBox.appendChild(div);
     });
-    chatBox.scrollTop=chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
 
-  document.getElementById("sendBtn").onclick=async ()=>{
+  document.getElementById("sendBtn").onclick = async ()=>{
     const text = document.getElementById("msgInput").value.trim();
     if(!text) return;
     const btn = document.getElementById("sendBtn");
-    btn.disabled=true;
+    btn.disabled = true;
     try{
       await addDoc(messagesRef,{
         from: user.uid,
         text,
-        timestamp: new Date()  // Firestore can handle JS Date here
+        timestamp: new Date()
       });
-      document.getElementById("msgInput").value="";
-    }catch(e){showToast("Failed to send message","error");}
-    finally{btn.disabled=false;}
+      document.getElementById("msgInput").value = "";
+    } catch(e){ showToast("Failed to send message","error"); }
+    finally{ btn.disabled = false; }
   };
 }
 </script>
