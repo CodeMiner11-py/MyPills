@@ -137,9 +137,12 @@ textarea{resize:vertical;min-height:90px;}
 
 <div class="page">
   <div class="page-header">
-    <a class="back-link" id="backLink" href="app.html">← Back to dashboard</a>
+    <a class="back-link" onclick="history.back()" style="cursor:pointer;">← Back to previous page</a>
     <h1>Add <span>Medication</span></h1>
     <p class="page-sub" id="pageSub">Fill in the details below to add a new medication.</p>
+    <a href="barcode.html" style="display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:9px 16px;background:#fff0ef;color:#c0392b;border:1.5px solid #f0c8c4;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;">
+      <span class="material-symbols-outlined" style="font-size:17px;">barcode_reader</span> Scan a barcode instead
+    </a>
   </div>
 
   <!-- Shown only when arriving from the barcode scanner -->
@@ -282,11 +285,6 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("scanBannerSub").textContent =
       `"${name}" was pre-filled. Complete the schedule and start date to save.`;
 
-    // Update back link → scanner
-    const backLink = document.getElementById("backLink");
-    backLink.href        = "barcode.html";
-    backLink.textContent = "← Back to scanner";
-
     // Update subtitle
     document.getElementById("pageSub").textContent =
       "Scanned data pre-filled. Complete schedule and dates below.";
@@ -310,10 +308,8 @@ window.clearScanData = function() {
   sel.value = "MG"; sel.classList.remove("prefilled");
   document.getElementById("scanBanner").classList.remove("show");
 
-  // Restore defaults
-  document.getElementById("backLink").href        = "app.html";
-  document.getElementById("backLink").textContent = "← Back to dashboard";
-  document.getElementById("pageSub").textContent  = "Fill in the details below to add a new medication.";
+  // Restore subtitle and clean URL
+  document.getElementById("pageSub").textContent = "Fill in the details below to add a new medication.";
 
   // Clean URL without reloading
   history.replaceState({}, "", window.location.pathname);
