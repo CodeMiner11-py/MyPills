@@ -971,12 +971,58 @@ function displayResult(d, rawCode) {
 // ─── ADD TO MEDICATIONS ──────────────────────────────────────────
 window.addToMedications = async function() {
   if (!lastResult || !currentUser) return;
+  const d = lastResult;
+
+  // ── Title: "{Brand} (from {Manufacturer})" ───────────────────────
+  const brand = (d.brand   || "").trim();
+  const mfr   = (d.mfr    || "").trim();
+  const title = brand && mfr ? `${brand} (from ${mfr})`
+              : brand        ? brand
+              : (d.generic   || "Unknown");
+
+  // ── Dosage: split strength into value + unit ──────────────────────
+  let dosageValue = "", dosageUnit = "MG";
+  if (d.strength) {
+    const m = d.strength.match(/^([\d.,]+)\s*(MG|MCG|G|ML|IU|MEQ|%)(?:\/\w+)?/i);
+    if (m) { dosageValue = m[1]; dosageUnit = m[2].toUpperCase(); }
+    else   { dosageValue = d.strength; }
+  }
+
+  // ── Notes: dump everything not already in title/dosage ────────────
+  // Unconditionally include all fields that have a value.
+  const lines = [];
+  const add = (label, val) => {
+    const s = (val == null) ? "" : String(val).trim();
+    if (s) lines.push(`${label}: ${s}`);
+  };
+
+  add("Generic name",  d.generic);
+  add("Full name",     d.fullName);
+  add("Strength",      d.strength);
+  add("Dosage form",   d.form);
+  add("Route",         d.route);
+  add("Product type",  d.type);
+  add("NDC",           d.ndc);
+  add("RxCUI",         d.rxcui);
+  add("Manufacturer",  d.mfr);
+  add("Data source",   d.source);
+
+  // Safety net: any extra keys the API returned that aren't handled above
+  const handled = new Set(["brand","generic","fullName","strength","form","route",
+                            "type","ndc","rxcui","mfr","source"]);
+  for (const [k, v] of Object.entries(d)) {
+    if (!handled.has(k)) add(k, v);
+  }
+
+  // Use | as separator — safer than \n in URL params, decoded in medication_add.html
+  const noteString = lines.join(" | ");
+
   const params = new URLSearchParams({
-    name:     lastResult.brand   || "",
-    generic:  lastResult.generic || "",
-    form:     lastResult.form    || "",
-    strength: lastResult.strength|| "",
-    ndc:      lastResult.ndc     || ""
+    name:        title,
+    dosageValue,
+    dosageUnit,
+    notes:       noteString,
+    fromscan:    "1",
   });
   window.location = "medication_add.html?" + params.toString();
 };

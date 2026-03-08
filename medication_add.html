@@ -263,8 +263,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const name        = p.get("name")        || "";
   const dosageValue = p.get("dosageValue") || "";
   const dosageUnit  = p.get("dosageUnit")  || "";
-  const notes       = p.get("notes")       || "";
-  const fromScan    = p.has("name");           // was redirected from scanner
+  // Pipe-separated notes from barcode scanner — convert back to newlines for textarea
+  const notesRaw    = p.get("notes")       || "";
+  const notes       = notesRaw.replace(/ \| /g, "\n");
+  const fromScan    = p.get("fromscan") === "1";
 
   if (fromScan && name) {
     // Fill text/number fields
