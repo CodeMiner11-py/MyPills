@@ -73,6 +73,60 @@
   }
   .revoke-btn:hover{background:#fff0ef;border-color:#c0392b;}
 
+  /* ── Modal overlay ── */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.35);
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    z-index:500;display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+
+  .modal{
+    background:#fff;border-radius:24px;padding:32px;
+    max-width:420px;width:calc(100% - 40px);
+    box-shadow:0 24px 80px rgba(0,0,0,0.18);
+    transform:translateY(20px) scale(0.97);
+    transition:transform .28s cubic-bezier(.34,1.56,.64,1), opacity .25s ease;
+    opacity:0;
+  }
+  .modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1;}
+
+  .modal-title{font-size:1.1rem;font-weight:700;color:#1a1a1a;margin-bottom:16px;}
+
+  .modal-warning{
+    display:flex;gap:12px;align-items:flex-start;
+    background:#fffbeb;border:1.5px solid #f6d860;
+    border-radius:14px;padding:14px 16px;margin-bottom:24px;
+  }
+  .modal-warning-icon{
+    flex-shrink:0;width:22px;height:22px;margin-top:1px;
+  }
+  .modal-warning-text{font-size:13px;color:#7a5c00;line-height:1.55;font-weight:500;}
+
+  .modal-email-highlight{
+    font-size:13px;color:#555;margin-bottom:20px;
+    background:#f7f7f5;border-radius:10px;padding:10px 14px;
+  }
+  .modal-email-highlight strong{color:#1a1a1a;}
+
+  .modal-actions{display:flex;gap:10px;}
+  .modal-cancel{
+    flex:1;padding:12px;background:#f5f5f3;color:#555;border:none;
+    border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;
+    transition:background .2s;font-family:inherit;
+  }
+  .modal-cancel:hover{background:#ececea;}
+  .modal-confirm{
+    flex:1;padding:12px;background:#c0392b;color:#fff;border:none;
+    border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;
+    transition:all .2s;font-family:inherit;
+    box-shadow:0 4px 12px rgba(192,57,43,0.2);
+  }
+  .modal-confirm:hover{transform:translateY(-1px);}
+  .modal-confirm.revoke-confirm{background:#1a1a1a;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+  .modal-confirm.revoke-confirm:hover{background:#333;}
+
   .toast{
     position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);
     background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;
@@ -107,12 +161,52 @@
       <label>Caregiver's Email</label>
       <input type="email" id="caregiverEmail" placeholder="caregiver@email.com">
     </div>
-    <button class="submit-btn" id="submitBtn" onclick="grantAccess()">Grant Access</button>
+    <button class="submit-btn" id="submitBtn" onclick="promptGrantAccess()">Grant Access</button>
   </div>
 
   <div class="card">
     <div class="section-title">People with Access</div>
     <div id="caregiverList"><div style="text-align:center; padding:20px; color:#ccc;">Loading...</div></div>
+  </div>
+</div>
+
+<!-- Grant Access Modal -->
+<div class="modal-overlay" id="grantModal">
+  <div class="modal">
+    <div class="modal-title">Do you want to allow this person to access your information?</div>
+    <div class="modal-email-highlight">Granting access to: <strong id="grantEmailDisplay"></strong></div>
+    <div class="modal-warning">
+      <svg class="modal-warning-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 2L2 19h18L11 2z" fill="#f6d860" stroke="#c9a800" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M11 9v4" stroke="#7a5c00" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="11" cy="15.5" r="1" fill="#7a5c00"/>
+      </svg>
+      <span class="modal-warning-text">This person will be able to see all your medication and appointment history. Only share with trusted people.</span>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('grantModal')">Cancel</button>
+      <button class="modal-confirm" id="grantConfirmBtn" onclick="confirmGrantAccess()">Grant Access</button>
+    </div>
+  </div>
+</div>
+
+<!-- Revoke Access Modal -->
+<div class="modal-overlay" id="revokeModal">
+  <div class="modal">
+    <div class="modal-title">Do you want to remove this person's access?</div>
+    <div class="modal-email-highlight">Removing access for: <strong id="revokeEmailDisplay"></strong></div>
+    <div class="modal-warning">
+      <svg class="modal-warning-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 2L2 19h18L11 2z" fill="#f6d860" stroke="#c9a800" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M11 9v4" stroke="#7a5c00" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="11" cy="15.5" r="1" fill="#7a5c00"/>
+      </svg>
+      <span class="modal-warning-text">This person will lose access to your data unless you re-add them.</span>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('revokeModal')">Cancel</button>
+      <button class="modal-confirm revoke-confirm" id="revokeConfirmBtn" onclick="confirmRevokeAccess()">Remove Access</button>
+    </div>
   </div>
 </div>
 
@@ -136,6 +230,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let pendingGrantEmail = null;
+let pendingRevokeEmail = null;
+
 function showToast(msg, isError = false) {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -143,10 +240,26 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.classList.remove("show"), 3000);
 }
 
+function openModal(id) {
+  document.getElementById(id).classList.add("open");
+}
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+// Close modal when clicking outside
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove("open");
+  });
+});
+
 setPersistence(auth, browserLocalPersistence).then(() => {
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location = "continue.html"; return; }
-    loadPatients(user.email);
+    document.getElementById("userHeaderEmail").textContent = user.email;
+    setupRealtimeList(user.uid);
   });
 });
 
@@ -166,38 +279,62 @@ function setupRealtimeList(uid) {
           <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
           <div class="caregiver-email">${email}</div>
         </div>
-        <button class="revoke-btn" onclick="revokeAccess('${email}')">Revoke</button>
+        <button class="revoke-btn" onclick="promptRevokeAccess('${email}')">Revoke</button>
       </div>
     `).join('');
   });
 }
 
-window.grantAccess = async () => {
+// ── Grant flow ──
+window.promptGrantAccess = function() {
   const emailInp = document.getElementById("caregiverEmail");
   const email = emailInp.value.trim().toLowerCase();
   if (!email.includes('@')) return showToast("Enter a valid email", true);
+  pendingGrantEmail = email;
+  document.getElementById("grantEmailDisplay").textContent = email;
+  openModal("grantModal");
+};
 
-  const btn = document.getElementById("submitBtn");
+window.confirmGrantAccess = async function() {
+  if (!pendingGrantEmail) return;
+  const email = pendingGrantEmail;
+  const btn = document.getElementById("grantConfirmBtn");
   btn.disabled = true;
-  const user = auth.currentUser;
+  btn.textContent = "Granting…";
+  closeModal("grantModal");
 
+  const user = auth.currentUser;
   try {
     await updateDoc(doc(db, "users", user.uid), {
-      // Keep the patient's name updated so the caregiver sees it
       displayName: user.displayName || user.email.split('@')[0],
       caregivers: arrayUnion(email)
     });
     showToast(`Access granted to ${email}`);
-    emailInp.value = "";
+    document.getElementById("caregiverEmail").value = "";
   } catch (e) {
     showToast("Error granting access", true);
   } finally {
     btn.disabled = false;
+    btn.textContent = "Grant Access";
+    pendingGrantEmail = null;
   }
 };
 
-window.revokeAccess = async (email) => {
-  if (!confirm(`Revoke access for ${email}?`)) return;
+// ── Revoke flow ──
+window.promptRevokeAccess = function(email) {
+  pendingRevokeEmail = email;
+  document.getElementById("revokeEmailDisplay").textContent = email;
+  openModal("revokeModal");
+};
+
+window.confirmRevokeAccess = async function() {
+  if (!pendingRevokeEmail) return;
+  const email = pendingRevokeEmail;
+  const btn = document.getElementById("revokeConfirmBtn");
+  btn.disabled = true;
+  btn.textContent = "Removing…";
+  closeModal("revokeModal");
+
   const user = auth.currentUser;
   try {
     await updateDoc(doc(db, "users", user.uid), {
@@ -206,6 +343,10 @@ window.revokeAccess = async (email) => {
     showToast("Access revoked");
   } catch (e) {
     showToast("Error revoking access", true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Remove Access";
+    pendingRevokeEmail = null;
   }
 };
 
