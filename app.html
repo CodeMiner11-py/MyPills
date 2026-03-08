@@ -68,6 +68,7 @@ header{
 @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:400px){.grid{grid-template-columns:1fr;}}
 
+/* STANDARD SINGLE CARD */
 .nav-card{
   background:#fff;
   border-radius:18px;
@@ -80,29 +81,61 @@ header{
   border:1.5px solid transparent;
 }
 .nav-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.1);border-color:#f0d0ce;}
-.nav-card.danger:hover{border-color:#f0d0ce;}
 
 .card-icon-wrap{
   width:46px;height:46px;border-radius:12px;
   background:#fff0ef;
   display:flex;align-items:center;justify-content:center;
-  font-size:22px;margin-bottom:14px;
+  margin-bottom:14px;
 }
-.nav-card.grey .card-icon-wrap{background:#f5f5f5;}
-.nav-card.danger .card-icon-wrap{background:#fff0ef;}
-
 .card-label{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
 .card-desc{font-size:12px;color:#aaa;line-height:1.5;}
 .card-icon-wrap .material-symbols-outlined{font-size:24px;color:#c0392b;}
-.nav-card.grey .card-icon-wrap .material-symbols-outlined{color:#aaa;}
-.nav-card.logout-card .card-icon-wrap .material-symbols-outlined{color:#c0392b;}
+
+/* SPLIT CARD — one box, two action buttons side by side */
+.split-card{
+  background:#fff;
+  border-radius:18px;
+  padding:24px 22px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.05);
+  border:1.5px solid transparent;
+  transition:all .2s ease;
+  display:flex;
+  flex-direction:column;
+}
+.split-card:hover{box-shadow:0 8px 30px rgba(0,0,0,0.1);border-color:#f0d0ce;}
+.split-card .card-icon-wrap{margin-bottom:14px;}
+.split-card .card-label{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.split-card .card-desc{font-size:12px;color:#aaa;line-height:1.5;margin-bottom:16px;}
+.split-btns{display:flex;gap:8px;margin-top:auto;}
+.split-btn{
+  flex:1;padding:9px 10px;border-radius:10px;
+  font-size:12px;font-weight:700;text-decoration:none;
+  text-align:center;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  white-space:nowrap;
+}
+.split-btn .material-symbols-outlined{font-size:15px;}
+.split-btn.primary{background:#c0392b;color:#fff;}
+.split-btn.primary:hover{background:#a93226;}
+.split-btn.ghost{background:#fff0ef;color:#c0392b;border:1.5px solid #f0d0ce;}
+.split-btn.ghost:hover{background:#ffe4e1;}
+
+/* BARCODE CARD */
+.nav-card.barcode-card .card-icon-wrap{background:#fff0ef;}
+.nav-card.barcode-card .card-icon-wrap .material-symbols-outlined{color:#c0392b;}
 
 /* LOGOUT CARD */
-.nav-card.logout-card{background:#fff0ef;border-color:#f0d0ce;}
+.nav-card.logout-card{
+  background:#fff0ef;
+  border-color:#f0d0ce;
+  cursor:pointer;
+}
+.nav-card.logout-card:hover{background:#ffe0dd;border-color:#c0392b;transform:translateY(-3px);}
+.nav-card.logout-card .card-icon-wrap{background:rgba(192,57,43,0.12);}
+.nav-card.logout-card .card-icon-wrap .material-symbols-outlined{color:#c0392b;}
 .nav-card.logout-card .card-label{color:#c0392b;}
 .nav-card.logout-card .card-desc{color:#e08070;}
-.nav-card.logout-card .card-icon-wrap{background:rgba(192,57,43,0.1);}
-.nav-card.logout-card:hover{background:#ffe0dd;border-color:#c0392b;}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 </style>
@@ -141,59 +174,76 @@ header{
   <div class="section-label">Quick Access</div>
   <div class="grid">
 
+    <!-- Calendar -->
     <a class="nav-card" href="calendar.html">
       <div class="card-icon-wrap"><span class="material-symbols-outlined">calendar_check</span></div>
       <div class="card-label">Calendar</div>
       <div class="card-desc">Log and track your daily doses.</div>
     </a>
 
-    <a class="nav-card" href="medications.html">
+    <!-- Medications — split card -->
+    <div class="nav-card split-card">
       <div class="card-icon-wrap"><span class="material-symbols-outlined">pill</span></div>
       <div class="card-label">Medications</div>
-      <div class="card-desc">View and manage all your medications.</div>
-    </a>
+      <div class="card-desc">View or add medications to your list.</div>
+      <div class="split-btns">
+        <a class="split-btn primary" href="medications.html"><span class="material-symbols-outlined">list</span> View All</a>
+        <a class="split-btn ghost" href="medication_add.html"><span class="material-symbols-outlined">add</span> Add New</a>
+      </div>
+    </div>
 
-    <a class="nav-card" href="new_medication.html">
-      <div class="card-icon-wrap"><span class="material-symbols-outlined">medication</span></div>
-      <div class="card-label">New Medication</div>
-      <div class="card-desc">Add a new medication to your list.</div>
-    </a>
+    <!-- Appointments — split card -->
+    <div class="nav-card split-card">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">clinical_notes</span></div>
+      <div class="card-label">Appointments</div>
+      <div class="card-desc">View upcoming or log a new doctor visit.</div>
+      <div class="split-btns">
+        <a class="split-btn primary" href="appointments.html"><span class="material-symbols-outlined">list_alt_check</span> View All</a>
+        <a class="split-btn ghost" href="new_doctors.html"><span class="material-symbols-outlined">add</span> Add New</a>
+      </div>
+    </div>
 
+    <!-- Share Access -->
     <a class="nav-card" href="share_access.html">
       <div class="card-icon-wrap"><span class="material-symbols-outlined">ios_share</span></div>
       <div class="card-label">Share Access</div>
       <div class="card-desc">Let a caregiver monitor your medications.</div>
     </a>
 
+    <!-- View Others -->
     <a class="nav-card" href="view_others.html">
       <div class="card-icon-wrap"><span class="material-symbols-outlined">calendar_lock</span></div>
       <div class="card-label">View Others</div>
       <div class="card-desc">See medications of people who shared with you.</div>
     </a>
 
-    <a class="nav-card" href="new_doctors.html">
-      <div class="card-icon-wrap"><span class="material-symbols-outlined">clinical_notes</span></div>
-      <div class="card-label">New Appointment</div>
-      <div class="card-desc">Log an upcoming doctor visit.</div>
-    </a>
-
-      <a class="nav-card" href="appointments.html">
-          <div class="card-icon-wrap"><span class="material-symbols-outlined">list_alt_check</span></div>
-          <div class="card-label">Doctor Appointments</div>
-          <div class="card-desc">View all upcoming appointments.</div>
-      </a>
-
+    <!-- Export Data -->
     <a class="nav-card" href="export_data.html">
       <div class="card-icon-wrap"><span class="material-symbols-outlined">content_copy</span></div>
       <div class="card-label">Export Data</div>
       <div class="card-desc">Download your medication and doctor history.</div>
     </a>
 
+    <!-- Scan Exports -->
     <a class="nav-card" href="view_export.html">
-        <div class="card-icon-wrap"><span class="material-symbols-outlined">content_paste_go</span></div>
-        <div class="card-label">Scan Exports</div>
-        <div class="card-desc">Read TXT exports securely.</div>
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">content_paste_go</span></div>
+      <div class="card-label">Scan Exports</div>
+      <div class="card-desc">Read TXT exports securely.</div>
     </a>
+
+    <!-- Barcode Scanner -->
+    <a class="nav-card barcode-card" href="barcode_scanner.html">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">barcode_reader</span></div>
+      <div class="card-label">Scan Barcode</div>
+      <div class="card-desc">Look up any medication by barcode or NDC code.</div>
+    </a>
+
+    <!-- Log Out -->
+    <div class="nav-card logout-card" onclick="logout()">
+      <div class="card-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+      <div class="card-label">Log Out</div>
+      <div class="card-desc">Sign out of your MyPills account.</div>
+    </div>
 
   </div>
 </div>
@@ -229,18 +279,18 @@ setPersistence(auth, browserLocalPersistence).then(() => {
       `Good ${getTimeOfDay()}, <span>${name}</span>`,
       `Welcome back, <span>${name}</span>!`,
       `Ready for your day, <span>${name}</span>?`,
-      `Hello, <span>${name}</span>! Let’s track those doses.`,
+      `Hello, <span>${name}</span>! Let's track those doses.`,
       `Time to check your medications, <span>${name}</span>.`,
-      `How’s it going today, <span>${name}</span>?`,
+      `How's it going today, <span>${name}</span>?`,
       `Keep up the good work, <span>${name}</span>!`,
       `Your meds are waiting, <span>${name}</span>.`,
-      `Let’s make this ${getTimeOfDay()} healthy, <span>${name}</span>!`,
-      `<span>${name}</span>, here’s your daily overview.`,
-      `Let’s get started, <span>${name}</span>!`
+      `Let's make this ${getTimeOfDay()} healthy, <span>${name}</span>!`,
+      `<span>${name}</span>, here's your daily overview.`,
+      `Let's get started, <span>${name}</span>!`
     ];
 
-    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-    document.getElementById("greetingName").innerHTML = randomGreeting;
+    document.getElementById("greetingName").innerHTML =
+      greetings[Math.floor(Math.random() * greetings.length)];
 
     await loadDoseStrip();
   });
@@ -261,7 +311,6 @@ async function loadDoseStrip() {
   const today = new Date();
   const todayKey = dateKey(today);
   const stripText = document.getElementById("doseStripText");
-
   const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
   const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const WEEK_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -272,8 +321,7 @@ async function loadDoseStrip() {
       .filter(d => d.id !== "_init" && d.data().name)
       .map(d => ({ id: d.id, ...d.data() }));
 
-    let totalDoses = 0;
-    let takenOrSkipped = 0;
+    let totalDoses = 0, takenOrSkipped = 0;
 
     for (const med of meds) {
       const start  = toD(med.startDate);
@@ -295,9 +343,7 @@ async function loadDoseStrip() {
         if (unit === "MONTHLY" && entry) applies = parseInt(entry.day) === today.getDate();
         if (unit === "YEARLY"  && entry) applies = parseInt(entry.month) === today.getMonth()+1 && parseInt(entry.day) === today.getDate();
         if (!applies) continue;
-
         totalDoses++;
-
         const logs = await getDocs(query(
           collection(db, "users", currentUser.uid, "medications", med.id, "logs"),
           where("day", "==", todayKey),
@@ -308,13 +354,9 @@ async function loadDoseStrip() {
     }
 
     const remaining = totalDoses - takenOrSkipped;
-    if (totalDoses === 0) {
-      stripText.textContent = "No doses scheduled today";
-    } else if (remaining === 0) {
-      stripText.textContent = "All doses logged for today ✓";
-    } else {
-      stripText.textContent = `${remaining} dose${remaining > 1 ? "s" : ""} not yet logged`;
-    }
+    if (totalDoses === 0)    stripText.textContent = "No doses scheduled today";
+    else if (remaining === 0) stripText.textContent = "All doses logged for today ✓";
+    else                      stripText.textContent = `${remaining} dose${remaining > 1 ? "s" : ""} not yet logged`;
   } catch(e) {
     stripText.textContent = "Could not load doses";
   }
