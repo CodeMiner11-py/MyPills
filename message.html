@@ -1,39 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" type="image/png" href="logo.png">
-    <title>Chat – MyPills</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
-      body{background:#f7f7f5;min-height:100vh;color:#1a1a1a;}
-      header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;}
-      .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
-      .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
-      .header-user{font-size:13px;color:#888;margin-right:12px;}
-      .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;}
-      .btn-logout:hover{background:#c0392b;color:#fff;}
-      .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
-      .page-header{margin-bottom:32px;}
-      .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
-      .back-link:hover{color:#c0392b;}
-      .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
-      .page h1 span{color:#c0392b;}
-      .chat-select{width:100%;padding:12px 16px;margin-bottom:20px;border-radius:12px;border:1.5px solid #eee;background:#fafafa;font-size:14px;}
-      .chat-box{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 40px rgba(0,0,0,0.05);min-height:300px;overflow-y:auto;margin-bottom:20px;}
-      .message{padding:10px 14px;border-radius:14px;margin-bottom:10px;max-width:75%;word-wrap:break-word;}
-      .mine{background:#c0392b;color:#fff;margin-left:auto;}
-      .theirs{background:#eee;color:#1a1a1a;margin-right:auto;}
-      .msg-input{display:flex;gap:8px;}
-      .msg-input input{flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid #eee;font-size:14px;}
-      .msg-input button{padding:12px 16px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;transition:all .2s;}
-      .msg-input button:hover{transform:translateY(-1px);}
-      .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all 0.4s ease;z-index:1000;pointer-events:none;}
-      .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-      .toast.error{background:#c0392b;}
-      .toast.success{background:#27ae60;}
-      @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-    </style>
+  <link rel="icon" type="image/png" href="logo.png">
+  <title>Chat – MyPills</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+    body{background:#f7f7f5;min-height:100vh;color:#1a1a1a;}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;}
+    .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+    .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+    .header-user{font-size:13px;color:#888;margin-right:12px;}
+    .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;}
+    .btn-logout:hover{background:#c0392b;color:#fff;}
+    .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+    .page-header{margin-bottom:32px;}
+    .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
+    .back-link:hover{color:#c0392b;}
+    .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
+    .page h1 span{color:#c0392b;}
+    .chat-select{width:100%;padding:12px 16px;margin-bottom:20px;border-radius:12px;border:1.5px solid #eee;background:#fafafa;font-size:14px;}
+    .chat-box{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 40px rgba(0,0,0,0.05);min-height:300px;max-height:420px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:4px;}
+    .chat-empty{color:#bbb;font-size:14px;text-align:center;margin:auto;}
+    .message{padding:10px 14px;border-radius:14px;max-width:75%;word-wrap:break-word;font-size:14px;line-height:1.4;}
+    .mine{background:#c0392b;color:#fff;margin-left:auto;border-bottom-right-radius:4px;}
+    .theirs{background:#eee;color:#1a1a1a;margin-right:auto;border-bottom-left-radius:4px;}
+    .msg-input{display:flex;gap:8px;}
+    .msg-input input{flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid #eee;font-size:14px;outline:none;transition:border-color .2s;}
+    .msg-input input:focus{border-color:#c0392b;}
+    .msg-input button{padding:12px 20px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;}
+    .msg-input button:hover{background:#a93226;}
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all 0.4s ease;z-index:1000;pointer-events:none;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .toast.error{background:#c0392b;}
+    .toast.success{background:#27ae60;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  </style>
 </head>
 <body>
 <header>
@@ -48,14 +50,16 @@
   <div class="page-header">
     <a class="back-link" href="app.html">← Back to dashboard</a>
     <h1>Chat <span>Messages</span></h1>
-    <p class="page-sub">Select someone to chat with in real-time.</p>
+    <p style="font-size:13px;color:#aaa;margin-top:6px;">Chat with your caregivers or patients.</p>
   </div>
 
   <select id="chatUserSelect" class="chat-select">
     <option value="">Select user...</option>
   </select>
 
-  <div class="chat-box" id="chatBox">Select a user to start chatting.</div>
+  <div class="chat-box" id="chatBox">
+    <div class="chat-empty">Select a user to start chatting.</div>
+  </div>
 
   <div class="msg-input">
     <input type="text" id="msgInput" placeholder="Type your message...">
@@ -68,7 +72,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -76,7 +80,8 @@ const firebaseConfig = {
   projectId: "mypills-f768a",
   storageBucket: "mypills-f768a.appspot.com",
   messagingSenderId: "150822030429",
-  appId: "1:150822030429:web:6805cc679e0a35f3d9b4"
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -87,86 +92,123 @@ let currentUser = null;
 let currentChatID = null;
 let chatUnsub = null;
 
-function showToast(msg, type=""){const t=document.getElementById("toast");t.textContent=msg;t.className="toast show"+(type?" "+type:"");setTimeout(()=>t.classList.remove("show"),3500);}
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (type ? " " + type : "");
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
 
-document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location.href="index.html"));
+document.getElementById("logoutBtn").addEventListener("click", () =>
+  signOut(auth).then(() => window.location.href = "index.html")
+);
 
-setPersistence(auth,browserLocalPersistence).then(()=>{
-  onAuthStateChanged(auth,user=>{
-    if(!user){window.location="continue.html";return;}
-    currentUser=user;
-    document.getElementById("userHeaderEmail").textContent=user.email;
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    document.getElementById("userHeaderEmail").textContent = user.displayName || user.email;
     setupChatList();
   });
 });
 
-async function getUIDFromEmail(email){
-  const q=query(collection(db,"users"),where("email","==",email));
-  const snap = await getDocs(q);
-  if(!snap.empty) return snap.docs[0].id;
-  return null;
-}
+async function setupChatList() {
+  const chatUsers = []; // { email, uid, label }
 
-async function setupChatList(){
-  const userSnap = await getDoc(doc(db,"users",currentUser.uid));
-  const data = userSnap.data();
-  const caregivers = data.caregivers || [];
-  const patients = data.patients || [];
-  const chatUsers = [];
+  // 1. Caregivers: stored as emails on current user's doc
+  const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+  const userData = userSnap.data() || {};
+  const caregiverEmails = userData.caregivers || [];
 
-  for(const email of caregivers){
-    const q=query(collection(db,"users"),where("email","==",email));
+  for (const email of caregiverEmails) {
+    const q = query(collection(db, "users"), where("email", "==", email.toLowerCase()));
     const snap = await getDocs(q);
-    if(!snap.empty) chatUsers.push({email, uid:snap.docs[0].id});
+    if (!snap.empty) {
+      const d = snap.docs[0];
+      chatUsers.push({ email: d.data().email, uid: d.id, label: `${d.data().displayName || email} (caregiver)` });
+    }
   }
 
-  for(const uid of patients){
-    const pSnap = await getDoc(doc(db,"users",uid));
-    if(pSnap.exists()) chatUsers.push({email:pSnap.data().email, uid});
-  }
+  // 2. Patients: users who have current user's email in their caregivers array
+  const patientsSnap = await getDocs(
+    query(collection(db, "users"), where("caregivers", "array-contains", currentUser.email.toLowerCase()))
+  );
+  patientsSnap.forEach(d => {
+    const data = d.data();
+    chatUsers.push({ email: data.email, uid: d.id, label: `${data.displayName || data.email} (patient)` });
+  });
 
   const select = document.getElementById("chatUserSelect");
-  select.innerHTML='<option value="">Select user...</option>'+chatUsers.map(u=>`<option value="${u.uid}">${u.email}</option>`).join('');
+  if (chatUsers.length === 0) {
+    select.innerHTML = '<option value="">No caregivers or patients found.</option>';
+    return;
+  }
 
-  select.addEventListener("change",()=>{
-    if(chatUnsub) chatUnsub();
+  select.innerHTML = '<option value="">Select user...</option>' +
+    chatUsers.map(u => `<option value="${u.uid}">${u.label}</option>`).join("");
+
+  select.addEventListener("change", () => {
+    if (chatUnsub) { chatUnsub(); chatUnsub = null; }
     const otherUID = select.value;
-    if(!otherUID){document.getElementById("chatBox").textContent="Select a user to start chatting.";return;}
-    const ids=[currentUser.uid,otherUID].sort();
-    currentChatID=ids.join("_");
-    setupChat(currentChatID);
+    if (!otherUID) {
+      document.getElementById("chatBox").innerHTML = '<div class="chat-empty">Select a user to start chatting.</div>';
+      currentChatID = null;
+      return;
+    }
+    // Deterministic chat ID: sort both UIDs so it's the same from either side
+    const ids = [currentUser.uid, otherUID].sort();
+    currentChatID = ids.join("_");
+    listenToChat(currentChatID);
   });
 }
 
-function setupChat(chatID){
-  const chatRef = collection(db,"messages",chatID,"msgs");
-  chatUnsub=onSnapshot(chatRef,snap=>{
-    const box=document.getElementById("chatBox");
-    box.innerHTML="";
-    snap.docs.forEach(d=>{
-      const m=d.data();
-      const div=document.createElement("div");
-      div.className="message "+(m.senderUID===currentUser.uid?"mine":"theirs");
-      div.textContent=m.body;
+function listenToChat(chatID) {
+  const msgsRef = collection(db, "messages", chatID, "msgs");
+  const q = query(msgsRef, orderBy("timestamp", "asc"));
+  chatUnsub = onSnapshot(q, snap => {
+    const box = document.getElementById("chatBox");
+    box.innerHTML = "";
+    if (snap.empty) {
+      box.innerHTML = '<div class="chat-empty">No messages yet. Say hello!</div>';
+      return;
+    }
+    snap.docs.forEach(d => {
+      const m = d.data();
+      const div = document.createElement("div");
+      div.className = "message " + (m.senderUID === currentUser.uid ? "mine" : "theirs");
+      div.textContent = m.body;
       box.appendChild(div);
     });
-    box.scrollTop=box.scrollHeight;
+    box.scrollTop = box.scrollHeight;
   });
 }
 
-document.getElementById("sendBtn").addEventListener("click",async()=>{
-  const input=document.getElementById("msgInput");
-  const msg=input.value.trim();
-  if(!msg || !currentChatID) return;
-  const chatRef = collection(db,"messages",currentChatID,"msgs");
-  await updateDoc(doc(db,"messages",currentChatID),{}).catch(()=>{}); // ensure doc exists
-  await updateDoc(doc(chatRef,msg+Date.now()),{
-    body:msg,
-    senderUID:currentUser.uid,
-    timestamp:Date.now()
-  });
-  input.value="";
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+document.getElementById("msgInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
 });
+
+async function sendMessage() {
+  const input = document.getElementById("msgInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!currentChatID) { showToast("Select a user first.", "error"); return; }
+
+  input.value = "";
+
+  try {
+    // Ensure the parent chat doc exists (required before writing subcollection)
+    await setDoc(doc(db, "messages", currentChatID), { exists: true }, { merge: true });
+    // Add message to subcollection
+    await addDoc(collection(db, "messages", currentChatID, "msgs"), {
+      body: msg,
+      senderUID: currentUser.uid,
+      timestamp: Date.now()
+    });
+  } catch(e) {
+    showToast("Failed to send: " + e.message, "error");
+  }
+}
 </script>
 </body>
 </html>
