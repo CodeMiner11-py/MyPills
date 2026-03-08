@@ -18,11 +18,16 @@
       .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
       .back-link:hover{color:#c0392b;}
       .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
-      .chat-box{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.05);height:400px;overflow-y:auto;margin-bottom:16px;}
+      .caregiver-list{margin-bottom:24px;}
+      .caregiver-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:12px;cursor:pointer;}
+      .caregiver-info{display:flex;align-items:center;gap:12px;}
+      .caregiver-avatar{width:36px;height:36px;border-radius:10px;background:#fff0ef;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c0392b;}
+      .caregiver-email{font-size:14px;font-weight:600;color:#1a1a1a;}
+      .chat-box{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.05);height:400px;overflow-y:auto;margin-bottom:16px;display:none;}
       .message{padding:8px 14px;margin:4px 0;border-radius:14px;max-width:80%;word-break:break-word;}
       .sent{background:#c0392b;color:#fff;margin-left:auto;}
       .received{background:#eee;margin-right:auto;}
-      .msg-input{display:flex;gap:12px;}
+      .msg-input{display:flex;gap:12px;display:none;}
       .msg-input textarea{flex:1;padding:12px;border:1.5px solid #eee;border-radius:12px;background:#fafafa;resize:none;font-family:'Plus Jakarta Sans',sans-serif;}
       .send-btn{padding:12px 18px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;transition:all .2s;}
       .send-btn:hover{transform:translateY(-1px);}
@@ -45,10 +50,12 @@
 <div class="page">
   <div class="page-header">
     <a class="back-link" href="app.html">← Back to dashboard</a>
-    <h1 id="chatHeader">Chat</h1>
+    <h1 id="chatHeader">Select a Caregiver</h1>
   </div>
 
-  <div class="chat-box" id="chatBox">Loading messages…</div>
+  <div class="caregiver-list" id="caregiverList">Loading caregivers…</div>
+
+  <div class="chat-box" id="chatBox"></div>
 
   <div class="msg-input">
     <textarea id="msgInput" placeholder="Type your message…"></textarea>
@@ -61,7 +68,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -76,63 +83,82 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-function showToast(msg, type="") {
+let currentChatId = null;
+
+function showToast(msg,type="") {
   const t = document.getElementById("toast");
   t.textContent = msg;
-  t.className = "toast show" + (type ? " "+type : "");
-  setTimeout(() => t.classList.remove("show"), 3500);
+  t.className = "toast show"+(type?" "+type:"");
+  setTimeout(()=>t.classList.remove("show"),3500);
 }
 
-setPersistence(auth, browserLocalPersistence).then(() => {
-  onAuthStateChanged(auth, async user => {
-    if (!user) { window.location = "continue.html"; return; }
+setPersistence(auth, browserLocalPersistence).then(()=>{
+  onAuthStateChanged(auth, async user=>{
+    if(!user){window.location="continue.html";return;}
     document.getElementById("userHeaderEmail").textContent = user.email;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const chatId = urlParams.get("chatId");
-    const chatWithEmail = urlParams.get("name");
-    document.getElementById("chatHeader").textContent = "Chat with " + chatWithEmail;
-
-    const chatBox = document.getElementById("chatBox");
-    const input = document.getElementById("msgInput");
-    const sendBtn = document.getElementById("sendBtn");
-
-    // Listen to messages in this chat
-    const messagesRef = collection(db, "messages", chatId, "messages");
-    const q = query(messagesRef, orderBy("timestamp"));
-    onSnapshot(q, snapshot => {
-      chatBox.innerHTML = "";
-      snapshot.docs.forEach(docSnap => {
-        const m = docSnap.data();
-        const div = document.createElement("div");
-        div.className = "message " + (m.from === user.uid ? "sent" : "received");
-        div.textContent = m.text;
-        chatBox.appendChild(div);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    sendBtn.addEventListener("click", async () => {
-      const text = input.value.trim();
-      if (!text) return;
-      sendBtn.disabled = true;
-      try {
-        await addDoc(messagesRef, {
-          from: user.uid,
-          text,
-          timestamp: new Date()
+    const listDiv = document.getElementById("caregiverList");
+    const userDoc = doc(db,"users",user.uid);
+    onSnapshot(userDoc,snap=>{
+      const caregivers = snap.data()?.caregivers||[];
+      if(caregivers.length===0){listDiv.innerHTML="No caregivers added.";return;}
+      listDiv.innerHTML = caregivers.map(email=>`
+        <div class="caregiver-row" data-email="${email}">
+          <div class="caregiver-info">
+            <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
+            <div class="caregiver-email">${email}</div>
+          </div>
+        </div>
+      `).join('');
+      listDiv.querySelectorAll('.caregiver-row').forEach(row=>{
+        row.addEventListener('click',()=>{
+          startChat(user,row.dataset.email);
         });
-        input.value = "";
-      } catch (e) {
-        showToast("Failed to send message", "error");
-      } finally { sendBtn.disabled = false; }
+      });
     });
   });
 });
 
-document.getElementById("logoutBtn").addEventListener("click", () =>
-  signOut(auth).then(() => window.location.href = "index.html")
-);
+document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location="index.html"));
+
+function startChat(user,targetEmail){
+  const chatHeader = document.getElementById("chatHeader");
+  chatHeader.textContent = "Chat with " + targetEmail;
+
+  const chatBox = document.getElementById("chatBox");
+  const inputDiv = document.querySelector(".msg-input");
+  chatBox.style.display="block";
+  inputDiv.style.display="flex";
+
+  // Construct chatId: patientUID_caregiverUID
+  currentChatId = [user.uid,targetEmail.replace(/[@.]/g,"_")].sort().join("_");
+
+  const messagesRef = collection(db,"messages",currentChatId,"messages");
+  const q = query(messagesRef,orderBy("timestamp"));
+  onSnapshot(q,snapshot=>{
+    chatBox.innerHTML="";
+    snapshot.docs.forEach(docSnap=>{
+      const m = docSnap.data();
+      const div = document.createElement("div");
+      div.className="message "+(m.from===user.uid?"sent":"received");
+      div.textContent = m.text;
+      chatBox.appendChild(div);
+    });
+    chatBox.scrollTop=chatBox.scrollHeight;
+  });
+
+  document.getElementById("sendBtn").onclick=async ()=>{
+    const text = document.getElementById("msgInput").value.trim();
+    if(!text)return;
+    const btn = document.getElementById("sendBtn");
+    btn.disabled=true;
+    try{
+      await addDoc(messagesRef,{from:user.uid,text,timestamp:new Date()});
+      document.getElementById("msgInput").value="";
+    }catch(e){showToast("Failed to send message","error");}
+    finally{btn.disabled=false;}
+  };
+}
 </script>
 </body>
 </html>
