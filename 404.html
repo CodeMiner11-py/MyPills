@@ -138,26 +138,26 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 // ── ACCELERATING SPIN ─────────────────────────────────────────────
-// Propeller ramp-up: starts slow (~0.3 rot/sec), accelerates to ~25 rot/sec.
-// Uses requestAnimationFrame + exponential speed curve for smoothness.
-const pill      = document.getElementById("pill");
-let angle       = 0;        // accumulated degrees
-let degsPerMs   = 0.108;    // initial speed  (0.3 rot/sec = 108 deg/sec)
-const maxSpeed  = 9.0;      // peak speed     (25 rot/sec  = 9000 deg/sec → 9 deg/ms)
-const accel     = 0.0020;   // deg/ms gained per ms — tweak to taste
-let lastTime    = null;
+// t² easing over 5s: nearly still at first, blurs out by the end.
+const pill     = document.getElementById("pill");
+const RAMP_MS  = 5000;   // matches redirect timer
+const V0       = 0.02;   // deg/ms at t=0  (~0.06 rot/sec — barely ticking)
+const V1       = 9.0;    // deg/ms at t=1  (~25 rot/sec  — full blur)
+let angle      = 0;
+let startTime  = null;
+let lastFrame  = null;
 
 function spinFrame(ts) {
-  if (lastTime === null) lastTime = ts;
-  const dt = Math.min(ts - lastTime, 64); // cap dt to avoid jump on tab-switch
-  lastTime = ts;
+  if (startTime === null) startTime = ts;
+  if (lastFrame  === null) lastFrame  = ts;
+  const dt      = Math.min(ts - lastFrame, 64); // cap so tab-switch doesn't jump
+  lastFrame = ts;
 
-  // Ramp up speed exponentially until max
-  if (degsPerMs < maxSpeed) {
-    degsPerMs = Math.min(degsPerMs * (1 + 0.003 * dt) + accel * dt, maxSpeed);
-  }
+  // t² curve: slow start, fast finish
+  const t     = Math.min((ts - startTime) / RAMP_MS, 1);
+  const speed = V0 + (V1 - V0) * (t * t);
 
-  angle = (angle + degsPerMs * dt) % 360;
+  angle = (angle + speed * dt) % 360;
   pill.style.transform = `rotate(${angle}deg)`;
   requestAnimationFrame(spinFrame);
 }
