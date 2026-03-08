@@ -90,14 +90,14 @@ function logout(){ signOut(auth).then(()=>{ window.location="index.html"; }); }
 window.logout = logout;
 
 // ZXing setup
-const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+const codeReader = new ZXing.BrowserMultiFormatReader();
 let scanning = false;
 
 document.getElementById("startScan").addEventListener("click", async ()=>{
     if(scanning) return;
     scanning = true;
     const videoElem = document.getElementById("scanner");
-    const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
     const selectedDeviceId = devices[0]?.deviceId || null;
 
     codeReader.decodeFromVideoDevice(selectedDeviceId, videoElem, (result, err) => {
