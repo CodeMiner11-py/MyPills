@@ -196,7 +196,7 @@ input:focus{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -229,38 +229,29 @@ function showToast(msg, type = "") {
   setTimeout(() => t.className = "toast", 3000);
 }
 
-async function loadCaregivers() {
+function loadCaregivers() {
   const list = document.getElementById("caregiverList");
-  const snap = await getDocs(collection(db, "users", currentUser.uid, "sharedAccess"));
-
-  if (snap.empty) {
-    list.innerHTML = `<div class="empty-msg">No one has access yet.</div>`;
-    return;
-  }
-
-  list.innerHTML = "";
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const email = docSnap.id;
-    const initial = email[0].toUpperCase();
-    const granted = data.grantedAt?.toDate
-      ? data.grantedAt.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      : "";
-
-    const row = document.createElement("div");
-    row.className = "caregiver-row";
-    row.id = `row-${CSS.escape(email)}`;
-    row.innerHTML = `
-      <div class="caregiver-info">
-        <div class="caregiver-avatar">${initial}</div>
-        <div>
-          <div class="caregiver-email">${email}</div>
-          ${granted ? `<div class="caregiver-date">Access granted ${granted}</div>` : ""}
+  onSnapshot(doc(db, "users", currentUser.uid), snap => {
+    const caregivers = snap.data()?.caregivers || [];
+    if (caregivers.length === 0) {
+      list.innerHTML = `<div class="empty-msg">No one has access yet.</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    caregivers.forEach(email => {
+      const row = document.createElement("div");
+      row.className = "caregiver-row";
+      row.innerHTML = `
+        <div class="caregiver-info">
+          <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
+          <div>
+            <div class="caregiver-email">${email}</div>
+          </div>
         </div>
-      </div>
-      <button class="revoke-btn" onclick="revokeAccess('${email}')">Revoke</button>
-    `;
-    list.appendChild(row);
+        <button class="revoke-btn" onclick="revokeAccess('${email}')">Revoke</button>
+      `;
+      list.appendChild(row);
+    });
   });
 }
 
@@ -280,14 +271,9 @@ async function grantAccess() {
   btn.textContent = "Saving...";
 
   try {
-    await setDoc(
-      doc(db, "users", currentUser.uid, "sharedAccess", email),
-      {
-        email,
-        grantedAt: Timestamp.now(),
-        patientName: currentUser.displayName || currentUser.email
-      }
-    );
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      caregivers: arrayUnion(email)
+    });
     document.getElementById("caregiverEmail").value = "";
 
     // Always call /invite — backend checks if they have an account and skips if so
@@ -304,7 +290,6 @@ async function grantAccess() {
     } catch(_) {}
 
     showToast("Access granted!", "success");
-    await loadCaregivers();
   } catch(e) {
     showToast("Error: " + e.message, "error");
   } finally {
@@ -315,9 +300,8 @@ async function grantAccess() {
 
 async function revokeAccess(email) {
   try {
-    await deleteDoc(doc(db, "users", currentUser.uid, "sharedAccess", email));
-    showToast("Access revoked.", "");
-    await loadCaregivers();
+    await updateDoc(doc(db, "users", currentUser.uid), { caregivers: arrayRemove(email) });
+    showToast("Access revoked.");
   } catch(e) {
     showToast("Error: " + e.message, "error");
   }
