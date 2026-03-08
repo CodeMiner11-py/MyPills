@@ -50,10 +50,10 @@
 <div class="page">
   <div class="page-header">
     <a class="back-link" href="app.html">← Back to dashboard</a>
-    <h1 id="chatHeader">Select a Caregiver</h1>
+    <h1 id="chatHeader">Select a Person</h1>
   </div>
 
-  <div class="caregiver-list" id="caregiverList">Loading caregivers…</div>
+  <div class="caregiver-list" id="caregiverList">Loading…</div>
 
   <div class="chat-box" id="chatBox"></div>
 
@@ -98,21 +98,35 @@ setPersistence(auth, browserLocalPersistence).then(()=>{
     document.getElementById("userHeaderEmail").textContent = user.email;
 
     const listDiv = document.getElementById("caregiverList");
-    const userDoc = doc(db,"users",user.uid);
-    onSnapshot(userDoc,snap=>{
-      const caregivers = snap.data()?.caregivers||[];
-      if(caregivers.length===0){listDiv.innerHTML="No caregivers added.";return;}
-      listDiv.innerHTML = caregivers.map(email=>`
-        <div class="caregiver-row" data-email="${email}">
-          <div class="caregiver-info">
-            <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
-            <div class="caregiver-email">${email}</div>
+    const userDocRef = doc(db,"users",user.uid);
+    onSnapshot(userDocRef,async snap=>{
+      const data = snap.data()||{};
+      const caregivers = data.caregivers||[];
+
+      // Find users where current user is caregiver
+      const allConnected = [...caregivers];
+      // Query users collection for anyone that has you as caregiver
+      // Fetch all users (simplest for small scale)
+      const usersCol = collection(db,"users");
+      onSnapshot(usersCol, usersSnap=>{
+        usersSnap.docs.forEach(d=>{
+          const u = d.data();
+          if(u.caregivers?.includes(user.email) && !allConnected.includes(u.email)){
+            allConnected.push(u.email);
+          }
+        });
+        if(allConnected.length===0){listDiv.innerHTML="No connections.";return;}
+        listDiv.innerHTML = allConnected.map(email=>`
+          <div class="caregiver-row" data-email="${email}">
+            <div class="caregiver-info">
+              <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
+              <div class="caregiver-email">${email}</div>
+            </div>
           </div>
-        </div>
-      `).join('');
-      listDiv.querySelectorAll('.caregiver-row').forEach(row=>{
-        row.addEventListener('click',()=>{
-          startChat(user,row.dataset.email);
+        `).join('');
+
+        listDiv.querySelectorAll('.caregiver-row').forEach(row=>{
+          row.addEventListener('click',()=>startChat(user,row.dataset.email));
         });
       });
     });
@@ -121,7 +135,7 @@ setPersistence(auth, browserLocalPersistence).then(()=>{
 
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location="index.html"));
 
-function startChat(user,targetEmail){
+async function startChat(user,targetEmail){
   const chatHeader = document.getElementById("chatHeader");
   chatHeader.textContent = "Chat with " + targetEmail;
 
@@ -130,8 +144,18 @@ function startChat(user,targetEmail){
   chatBox.style.display="block";
   inputDiv.style.display="flex";
 
-  // Construct chatId: patientUID_caregiverUID
-  currentChatId = [user.uid,targetEmail.replace(/[@.]/g,"_")].sort().join("_");
+  // Determine chatId: check both possible orderings
+  const sanitize = s=>s.replace(/[@.]/g,"_");
+  const option1 = user.uid+"_"+sanitize(targetEmail);
+  const option2 = sanitize(targetEmail)+"_"+user.uid;
+
+  const messagesRef1 = collection(db,"messages",option1,"messages");
+  const messagesRef2 = collection(db,"messages",option2,"messages");
+
+  // Pick the one that exists or default to option1
+  const doc1 = await getDoc(doc(db,"messages",option1));
+  const doc2 = await getDoc(doc(db,"messages",option2));
+  currentChatId = doc1.exists()?option1:(doc2.exists()?option2:option1);
 
   const messagesRef = collection(db,"messages",currentChatId,"messages");
   const q = query(messagesRef,orderBy("timestamp"));
