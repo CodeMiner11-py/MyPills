@@ -1,0 +1,4 @@
+# MyPills - Health Management
+MyPills is a website you can use to track your medications. MyPills will send you reminders via your email when you need to take a pill, and you can track expiry of pills. Additionally, you can scan a barcode to quickly add medications into your account. Plus, you get to save your doctors' appointments. You can share your information with a trusted person (plus send them messages) so they can make sure you're okay. Save your account with Google sign-in. And finally, you can export your data for others to assist you.
+
+Try it out now [by clicking here](https://mypills.kidslearninglab.com).
