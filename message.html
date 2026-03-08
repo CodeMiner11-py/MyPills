@@ -144,21 +144,16 @@ async function startChat(user,targetEmail){
   chatBox.style.display="block";
   inputDiv.style.display="flex";
 
-  // Determine chatId: check both possible orderings
   const sanitize = s=>s.replace(/[@.]/g,"_");
   const option1 = user.uid+"_"+sanitize(targetEmail);
   const option2 = sanitize(targetEmail)+"_"+user.uid;
 
-  const messagesRef1 = collection(db,"messages",option1,"messages");
-  const messagesRef2 = collection(db,"messages",option2,"messages");
-
-  // Pick the one that exists or default to option1
-  const doc1 = await getDoc(doc(db,"messages",option1));
-  const doc2 = await getDoc(doc(db,"messages",option2));
-  currentChatId = doc1.exists()?option1:(doc2.exists()?option2:option1);
+  // Always pick option1 as chatId for simplicity
+  currentChatId = option1;
 
   const messagesRef = collection(db,"messages",currentChatId,"messages");
   const q = query(messagesRef,orderBy("timestamp"));
+
   onSnapshot(q,snapshot=>{
     chatBox.innerHTML="";
     snapshot.docs.forEach(docSnap=>{
@@ -173,11 +168,15 @@ async function startChat(user,targetEmail){
 
   document.getElementById("sendBtn").onclick=async ()=>{
     const text = document.getElementById("msgInput").value.trim();
-    if(!text)return;
+    if(!text) return;
     const btn = document.getElementById("sendBtn");
     btn.disabled=true;
     try{
-      await addDoc(messagesRef,{from:user.uid,text,timestamp:new Date()});
+      await addDoc(messagesRef,{
+        from: user.uid,
+        text,
+        timestamp: new Date()  // Firestore can handle JS Date here
+      });
       document.getElementById("msgInput").value="";
     }catch(e){showToast("Failed to send message","error");}
     finally{btn.disabled=false;}
