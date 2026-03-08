@@ -1,180 +1,170 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" type="image/png" href="logo.png">
 <title>Share Access – MyPills</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
-  body{background:#f7f7f5;min-height:100vh;color:#1a1a1a;}
+*{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
 
-  header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:18px 40px;
-    background:rgba(255,255,255,0.75);
-    backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px);
-    border-bottom:1px solid rgba(0,0,0,0.08);
-    position:sticky;top:0;z-index:100;
-  }
-  .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
-  .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
-  .header-user{font-size:13px;color:#888;margin-right:12px;}
-  .btn-logout{
-    background:transparent;color:#c0392b;border:1.5px solid #c0392b;
-    border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;
-    cursor:pointer;transition:all .2s ease;
-  }
-  .btn-logout:hover{background:#c0392b;color:#fff;}
+body{background:#f7f7f5;min-height:100vh;}
 
-  .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
-  .page-header{margin-bottom:32px;}
-  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
-  .back-link:hover{color:#c0392b;}
-  .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
-  .page h1 span{color:#c0392b;}
-  .page-sub{font-size:0.9rem;color:#999;margin-top:6px;}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,0.08);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+.logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-user{font-size:13px;color:#888;}
+.btn-logout{
+  background:transparent;color:#c0392b;border:1.5px solid #c0392b;
+  border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s ease;
+}
+.btn-logout:hover{background:#c0392b;color:#fff;}
 
-  .card{background:#fff;border-radius:20px;padding:32px;box-shadow:0 8px 40px rgba(0,0,0,0.05);margin-bottom:24px;}
-  .form-group{margin-bottom:20px;}
-  label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:8px;}
-  input{
-    width:100%;padding:12px 16px;border:1.5px solid #eee;border-radius:12px;
-    font-size:14px;background:#fafafa;transition:all .2s;outline:none;
-  }
-  input:focus{border-color:#c0392b;background:#fff;box-shadow:0 0 0 4px rgba(192,57,43,0.05);}
+.page{
+  max-width:560px;
+  margin:0 auto;
+  padding:48px 20px;
+  animation:fadeUp .45s ease both;
+}
 
-  .submit-btn{
-    width:100%;padding:14px;background:#c0392b;color:#fff;border:none;
-    border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;
-    transition:all .2s ease;box-shadow:0 4px 12px rgba(192,57,43,0.2);
-  }
-  .submit-btn:hover{transform:translateY(-1px);}
-  .submit-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.page-header{margin-bottom:32px;}
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;color:#aaa;text-decoration:none;
+  margin-bottom:16px;
+  transition:color .2s;
+}
+.back-link:hover{color:#c0392b;}
+.page h1{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;}
+.page h1 span{color:#c0392b;}
+.page-sub{font-size:0.9rem;color:#999;margin-top:6px;}
 
-  .section-title{font-size:12px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;}
-  .caregiver-row{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:16px;background:#fcfcfc;border:1px solid #f0f0ee;
-    border-radius:14px;margin-bottom:12px;
-  }
-  .caregiver-info{display:flex;align-items:center;gap:12px;}
-  .caregiver-avatar{
-    width:36px;height:36px;border-radius:10px;background:#fff0ef;
-    display:flex;align-items:center;justify-content:center;
-    font-size:14px;font-weight:700;color:#c0392b;
-  }
-  .caregiver-email{font-size:14px;font-weight:600;color:#1a1a1a;}
+.card{
+  background:#fff;
+  border-radius:20px;
+  padding:36px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.07);
+  margin-bottom:24px;
+}
 
-  .caregiver-actions{display:flex;align-items:center;gap:8px;}
+.form-group{margin-bottom:22px;}
+label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:7px;}
+input{
+  width:100%;
+  padding:11px 14px;
+  border:1.5px solid #e8e8e8;
+  border-radius:10px;
+  font-size:14px;
+  color:#1a1a1a;
+  background:#fafafa;
+  transition:border-color .2s,box-shadow .2s;
+  outline:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+input:focus{
+  border-color:#c0392b;
+  box-shadow:0 0 0 3px rgba(192,57,43,0.08);
+  background:#fff;
+}
 
-  .msg-btn{
-    background:#fff0ef;color:#c0392b;border:1px solid #f0d0ce;
-    border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;
-    cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;
-  }
-  .msg-btn:hover{background:#c0392b;color:#fff;border-color:#c0392b;}
+.submit-btn{
+  width:100%;
+  padding:14px;
+  background:#c0392b;color:#fff;
+  border:none;border-radius:10px;
+  font-size:15px;font-weight:600;
+  cursor:pointer;
+  transition:all .2s ease;
+  box-shadow:0 4px 14px rgba(192,57,43,0.3);
+  margin-top:8px;
+}
+.submit-btn:hover{background:#a93226;transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,57,43,0.35);}
+.submit-btn:active{transform:scale(0.98);}
+.submit-btn:disabled{background:#e0a09a;cursor:not-allowed;transform:none;box-shadow:none;}
 
-  .revoke-btn{
-    background:transparent;color:#c0392b;border:1px solid #f0d0ce;
-    border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;
-    cursor:pointer;transition:all .2s;
-  }
-  .revoke-btn:hover{background:#fff0ef;border-color:#c0392b;}
+/* Shared list */
+.section-title{
+  font-size:13px;font-weight:700;color:#444;
+  margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:0.05em;
+}
 
-  /* ── Reason pills ── */
-  .reason-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
-  .reason-pill{
-    padding:7px 16px;border-radius:100px;border:1.5px solid #eee;
-    font-size:13px;font-weight:600;color:#888;cursor:pointer;
-    background:#fafafa;transition:all .2s;user-select:none;
-  }
-  .reason-pill.selected{background:#fff0ef;border-color:#c0392b;color:#c0392b;}
+.caregiver-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:#fafafa;
+  border:1.5px solid #f0f0ee;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+.caregiver-info{display:flex;align-items:center;gap:12px;}
+.caregiver-avatar{
+  width:38px;height:38px;
+  border-radius:50%;
+  background:#fff0ef;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;color:#c0392b;
+  flex-shrink:0;
+}
+.caregiver-email{font-size:14px;font-weight:600;color:#1a1a1a;}
+.caregiver-date{font-size:12px;color:#aaa;margin-top:2px;}
 
-  .msg-textarea{
-    width:100%;padding:12px 16px;border:1.5px solid #eee;border-radius:12px;
-    font-size:14px;background:#fafafa;transition:all .2s;outline:none;
-    resize:vertical;min-height:100px;font-family:'Plus Jakarta Sans',sans-serif;
-    color:#1a1a1a;line-height:1.6;
-  }
-  .msg-textarea:focus{border-color:#c0392b;background:#fff;box-shadow:0 0 0 4px rgba(192,57,43,0.05);}
-  .msg-textarea::placeholder{color:#ccc;}
+.revoke-btn{
+  background:transparent;
+  color:#c0392b;
+  border:1.5px solid #f0d0ce;
+  border-radius:8px;
+  padding:6px 14px;
+  font-size:12px;font-weight:600;
+  cursor:pointer;
+  transition:all .2s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.revoke-btn:hover{background:#fff0ef;border-color:#c0392b;}
 
-  /* ── Modal overlay ── */
-  .modal-overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,0.35);
-    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-    z-index:500;display:flex;align-items:center;justify-content:center;
-    opacity:0;pointer-events:none;transition:opacity .25s ease;
-  }
-  .modal-overlay.open{opacity:1;pointer-events:all;}
+.empty-msg{
+  text-align:center;
+  font-size:14px;color:#bbb;
+  padding:24px 0;
+}
 
-  .modal{
-    background:#fff;border-radius:24px;padding:32px;
-    max-width:420px;width:calc(100% - 40px);
-    box-shadow:0 24px 80px rgba(0,0,0,0.18);
-    transform:translateY(20px) scale(0.97);
-    transition:transform .28s cubic-bezier(.34,1.56,.64,1), opacity .25s ease;
-    opacity:0;
-  }
-  .modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1;}
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1a1a1a;color:#fff;
+  padding:12px 24px;border-radius:10px;
+  font-size:14px;font-weight:500;
+  opacity:0;pointer-events:none;
+  transition:all .3s ease;
+  z-index:999;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#c0392b;}
+.toast.success{background:#27ae60;}
 
-  .modal-title{font-size:1.1rem;font-weight:700;color:#1a1a1a;margin-bottom:16px;}
-
-  .modal-warning{
-    display:flex;gap:12px;align-items:flex-start;
-    background:#fffbeb;border:1.5px solid #f6d860;
-    border-radius:14px;padding:14px 16px;margin-bottom:24px;
-  }
-  .modal-warning-icon{flex-shrink:0;width:22px;height:22px;margin-top:1px;}
-  .modal-warning-text{font-size:13px;color:#7a5c00;line-height:1.55;font-weight:500;}
-
-  .modal-email-highlight{
-    font-size:13px;color:#555;margin-bottom:20px;
-    background:#f7f7f5;border-radius:10px;padding:10px 14px;
-  }
-  .modal-email-highlight strong{color:#1a1a1a;}
-
-  .modal-actions{display:flex;gap:10px;}
-  .modal-cancel{
-    flex:1;padding:12px;background:#f5f5f3;color:#555;border:none;
-    border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;
-    transition:background .2s;font-family:inherit;
-  }
-  .modal-cancel:hover{background:#ececea;}
-  .modal-confirm{
-    flex:1;padding:12px;background:#c0392b;color:#fff;border:none;
-    border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;
-    transition:all .2s;font-family:inherit;
-    box-shadow:0 4px 12px rgba(192,57,43,0.2);
-  }
-  .modal-confirm:hover{transform:translateY(-1px);}
-  .modal-confirm:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
-  .modal-confirm.revoke-confirm{background:#1a1a1a;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
-  .modal-confirm.revoke-confirm:hover{background:#333;}
-
-  .modal-label{font-size:13px;font-weight:600;color:#444;margin-bottom:8px;display:block;}
-
-  .toast{
-    position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);
-    background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;
-    font-size:14px;font-weight:500;opacity:0;transition:all 0.4s ease;
-    z-index:1000;pointer-events:none;
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .toast.error{background:#c0392b;}
-  .toast.success{background:#27ae60;}
-
-  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
 </style>
+<link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
 
 <header>
-  <a class="logo" href="app.html"><img src="pill.png"> MyPills</a>
-  <div>
-    <span class="header-user" id="userHeaderEmail"></span>
-    <button class="btn-logout" id="logoutBtn">Log Out</button>
+  <a class="logo" href="index.html">
+    <img src="pill.png"> MyPills
+  </a>
+  <div class="header-right">
+    <span class="header-user" id="userEmail"></span>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
   </div>
 </header>
 
@@ -182,83 +172,22 @@
   <div class="page-header">
     <a class="back-link" href="app.html">← Back to dashboard</a>
     <h1>Share <span>Access</span></h1>
-    <p class="page-sub">Allow caregivers to monitor your medication adherence.</p>
+    <p class="page-sub">Give a caregiver read-only access to your medications and calendar.</p>
   </div>
 
+  <!-- ADD CAREGIVER -->
   <div class="card">
-    <div class="form-group">
-      <label>Caregiver's Email</label>
-      <input type="email" id="caregiverEmail" placeholder="caregiver@email.com">
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Caregiver's Email Address</label>
+      <input type="email" id="caregiverEmail" placeholder="e.g. parent@example.com">
     </div>
-    <button class="submit-btn" id="submitBtn">Grant Access</button>
+    <button class="submit-btn" id="submitBtn" onclick="grantAccess()">Grant Access</button>
   </div>
 
+  <!-- CURRENT CAREGIVERS -->
   <div class="card">
-    <div class="section-title">People with Access</div>
-    <div id="caregiverList"><div style="text-align:center; padding:20px; color:#ccc;">Loading...</div></div>
-  </div>
-</div>
-
-<!-- Grant Access Modal -->
-<div class="modal-overlay" id="grantModal">
-  <div class="modal">
-    <div class="modal-title">Do you want to allow this person to access your information?</div>
-    <div class="modal-email-highlight">Granting access to: <strong id="grantEmailDisplay"></strong></div>
-    <div class="modal-warning">
-      <svg class="modal-warning-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 2L2 19h18L11 2z" fill="#f6d860" stroke="#c9a800" stroke-width="1.5" stroke-linejoin="round"/>
-        <path d="M11 9v4" stroke="#7a5c00" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="11" cy="15.5" r="1" fill="#7a5c00"/>
-      </svg>
-      <span class="modal-warning-text">This person will be able to see all your medication and appointment history. Only share with trusted people.</span>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" id="grantCancelBtn">Cancel</button>
-      <button class="modal-confirm" id="grantConfirmBtn">Grant Access</button>
-    </div>
-  </div>
-</div>
-
-<!-- Revoke Access Modal -->
-<div class="modal-overlay" id="revokeModal">
-  <div class="modal">
-    <div class="modal-title">Do you want to remove this person's access?</div>
-    <div class="modal-email-highlight">Removing access for: <strong id="revokeEmailDisplay"></strong></div>
-    <div class="modal-warning">
-      <svg class="modal-warning-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 2L2 19h18L11 2z" fill="#f6d860" stroke="#c9a800" stroke-width="1.5" stroke-linejoin="round"/>
-        <path d="M11 9v4" stroke="#7a5c00" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="11" cy="15.5" r="1" fill="#7a5c00"/>
-      </svg>
-      <span class="modal-warning-text">This person will lose access to your data unless you re-add them.</span>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" id="revokeCancelBtn">Cancel</button>
-      <button class="modal-confirm revoke-confirm" id="revokeConfirmBtn">Remove Access</button>
-    </div>
-  </div>
-</div>
-
-<!-- Send Message Modal -->
-<div class="modal-overlay" id="msgModal">
-  <div class="modal">
-    <div class="modal-title">💬 Send a Message</div>
-    <div class="modal-email-highlight">Sending to: <strong id="msgEmailDisplay"></strong></div>
-
-    <span class="modal-label">Reason</span>
-    <div class="reason-pills" id="reasonPills">
-      <div class="reason-pill" data-reason="Refill">💊 Refill</div>
-      <div class="reason-pill" data-reason="Question">❓ Question</div>
-      <div class="reason-pill" data-reason="Comment">💬 Comment</div>
-    </div>
-
-    <span class="modal-label" style="margin-bottom:8px;">Message</span>
-    <textarea class="msg-textarea" id="msgBody" placeholder="Write your message here…"></textarea>
-
-    <div class="modal-actions" style="margin-top:20px;">
-      <button class="modal-cancel" id="msgCancelBtn">Cancel</button>
-      <button class="modal-confirm" id="msgSendBtn">Send Message</button>
-    </div>
+    <div class="section-title">People with access</div>
+    <div id="caregiverList"><div class="empty-msg">Loading...</div></div>
   </div>
 </div>
 
@@ -266,8 +195,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -275,197 +204,133 @@ const firebaseConfig = {
   projectId: "mypills-f768a",
   storageBucket: "mypills-f768a.appspot.com",
   messagingSenderId: "150822030429",
-  appId: "1:150822030429:web:6805cc679e0a35f3d9b4"
+  appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
+  measurementId: "G-4CSFQDQG8S"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-let pendingGrantEmail = null;
-let pendingRevokeEmail = null;
-let pendingMsgEmail = null;
-let selectedReason = null;
-
-function showToast(msg, type = "") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show" + (type ? " " + type : "");
-  setTimeout(() => t.classList.remove("show"), 3500);
-}
-
-function openModal(id) { document.getElementById(id).classList.add("open"); }
-function closeModal(id) { document.getElementById(id).classList.remove("open"); }
-
-// Close on backdrop click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove("open"); });
-});
-
-// Reason pill selection
-document.getElementById("reasonPills").addEventListener("click", e => {
-  const pill = e.target.closest(".reason-pill");
-  if (!pill) return;
-  document.querySelectorAll(".reason-pill").forEach(p => p.classList.remove("selected"));
-  pill.classList.add("selected");
-  selectedReason = pill.dataset.reason;
-});
-
-// Header buttons
-document.getElementById("logoutBtn").addEventListener("click", () =>
-  signOut(auth).then(() => window.location.href = "index.html")
-);
-document.getElementById("grantCancelBtn").addEventListener("click", () => closeModal("grantModal"));
-document.getElementById("revokeCancelBtn").addEventListener("click", () => closeModal("revokeModal"));
-document.getElementById("msgCancelBtn").addEventListener("click", () => {
-  closeModal("msgModal");
-  resetMsgModal();
-});
-
-function resetMsgModal() {
-  document.getElementById("msgBody").value = "";
-  document.querySelectorAll(".reason-pill").forEach(p => p.classList.remove("selected"));
-  selectedReason = null;
-  const btn = document.getElementById("msgSendBtn");
-  btn.disabled = false;
-  btn.textContent = "Send Message";
-}
-
-// Grant button
-document.getElementById("submitBtn").addEventListener("click", () => {
-  const emailInp = document.getElementById("caregiverEmail");
-  const email = emailInp.value.trim().toLowerCase();
-  if (!email.includes('@')) return showToast("Enter a valid email", "error");
-  pendingGrantEmail = email;
-  document.getElementById("grantEmailDisplay").textContent = email;
-  openModal("grantModal");
-});
-
-// Confirm grant
-document.getElementById("grantConfirmBtn").addEventListener("click", async () => {
-  if (!pendingGrantEmail) return;
-  const email = pendingGrantEmail;
-  const btn = document.getElementById("grantConfirmBtn");
-  btn.disabled = true; btn.textContent = "Granting…";
-  closeModal("grantModal");
-  const user = auth.currentUser;
-  try {
-    await updateDoc(doc(db, "users", user.uid), {
-      displayName: user.displayName || user.email.split('@')[0],
-      caregivers: arrayUnion(email)
-    });
-    showToast(`Access granted to ${email}`, "success");
-    document.getElementById("caregiverEmail").value = "";
-  } catch (e) {
-    showToast("Error granting access", "error");
-  } finally {
-    btn.disabled = false; btn.textContent = "Grant Access";
-    pendingGrantEmail = null;
-  }
-});
-
-// Confirm revoke
-document.getElementById("revokeConfirmBtn").addEventListener("click", async () => {
-  if (!pendingRevokeEmail) return;
-  const email = pendingRevokeEmail;
-  const btn = document.getElementById("revokeConfirmBtn");
-  btn.disabled = true; btn.textContent = "Removing…";
-  closeModal("revokeModal");
-  const user = auth.currentUser;
-  try {
-    await updateDoc(doc(db, "users", user.uid), { caregivers: arrayRemove(email) });
-    showToast("Access revoked");
-  } catch (e) {
-    showToast("Error revoking access", "error");
-  } finally {
-    btn.disabled = false; btn.textContent = "Remove Access";
-    pendingRevokeEmail = null;
-  }
-});
-
-// Send message
-document.getElementById("msgSendBtn").addEventListener("click", async () => {
-  const message = document.getElementById("msgBody").value.trim();
-  if (!selectedReason) return showToast("Please select a reason", "error");
-  if (!message) return showToast("Please enter a message", "error");
-
-  const btn = document.getElementById("msgSendBtn");
-  btn.disabled = true; btn.textContent = "Sending…";
-
-  const user = auth.currentUser;
-  const senderName = user.displayName || user.email.split('@')[0];
-  const fullMessage = `[${selectedReason}]\n\n${message}`;
-
-  try {
-    const res = await fetch("https://api.mypills.kidslearninglab.com/add_note", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: pendingMsgEmail,
-        message: fullMessage,
-        from_name: senderName
-      })
-    });
-
-    if (!res.ok) throw new Error("Server error");
-
-    closeModal("msgModal");
-    resetMsgModal();
-    showToast("Message sent!", "success");
-  } catch (e) {
-    showToast("Failed to send message", "error");
-    btn.disabled = false;
-    btn.textContent = "Send Message";
-  }
-});
+let currentUser = null;
 
 setPersistence(auth, browserLocalPersistence).then(() => {
   onAuthStateChanged(auth, user => {
     if (!user) { window.location = "continue.html"; return; }
-    document.getElementById("userHeaderEmail").textContent = user.email;
-    setupRealtimeList(user.uid);
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+    loadCaregivers();
   });
 });
 
-function setupRealtimeList(uid) {
-  onSnapshot(doc(db, "users", uid), (snap) => {
-    const listDiv = document.getElementById("caregiverList");
-    const caregivers = snap.data()?.caregivers || [];
-    if (caregivers.length === 0) {
-      listDiv.innerHTML = `<div style="text-align:center;padding:20px;color:#bbb;font-size:14px;">No caregivers added.</div>`;
-      return;
-    }
-    listDiv.innerHTML = caregivers.map(email => `
-      <div class="caregiver-row">
-        <div class="caregiver-info">
-          <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast " + type + " show";
+  setTimeout(() => t.className = "toast", 3000);
+}
+
+async function loadCaregivers() {
+  const list = document.getElementById("caregiverList");
+  const snap = await getDocs(collection(db, "users", currentUser.uid, "sharedAccess"));
+
+  if (snap.empty) {
+    list.innerHTML = `<div class="empty-msg">No one has access yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    const email = docSnap.id;
+    const initial = email[0].toUpperCase();
+    const granted = data.grantedAt?.toDate
+      ? data.grantedAt.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "";
+
+    const row = document.createElement("div");
+    row.className = "caregiver-row";
+    row.id = `row-${CSS.escape(email)}`;
+    row.innerHTML = `
+      <div class="caregiver-info">
+        <div class="caregiver-avatar">${initial}</div>
+        <div>
           <div class="caregiver-email">${email}</div>
-        </div>
-        <div class="caregiver-actions">
-          <button class="msg-btn" data-email="${email}">Message</button>
-          <button class="revoke-btn" data-email="${email}">Revoke</button>
+          ${granted ? `<div class="caregiver-date">Access granted ${granted}</div>` : ""}
         </div>
       </div>
-    `).join('');
-
-    listDiv.querySelectorAll('.msg-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        pendingMsgEmail = btn.dataset.email;
-        document.getElementById("msgEmailDisplay").textContent = pendingMsgEmail;
-        resetMsgModal();
-        openModal("msgModal");
-      });
-    });
-
-    listDiv.querySelectorAll('.revoke-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        pendingRevokeEmail = btn.dataset.email;
-        document.getElementById("revokeEmailDisplay").textContent = pendingRevokeEmail;
-        openModal("revokeModal");
-      });
-    });
+      <button class="revoke-btn" onclick="revokeAccess('${email}')">Revoke</button>
+    `;
+    list.appendChild(row);
   });
 }
+
+async function grantAccess() {
+  const email = document.getElementById("caregiverEmail").value.trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    showToast("Please enter a valid email.", "error");
+    return;
+  }
+  if (email === currentUser.email.toLowerCase()) {
+    showToast("You can't share access with yourself.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    await setDoc(
+      doc(db, "users", currentUser.uid, "sharedAccess", email),
+      {
+        email,
+        grantedAt: Timestamp.now(),
+        patientName: currentUser.displayName || currentUser.email
+      }
+    );
+    document.getElementById("caregiverEmail").value = "";
+
+    // Always call /invite — backend checks if they have an account and skips if so
+    try {
+      await fetch("https://api.mypills.kidslearninglab.com/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invitee_email: email,
+          inviter_name: currentUser.displayName || currentUser.email,
+          inviter_email: currentUser.email
+        })
+      });
+    } catch(_) {}
+
+    showToast("Access granted!", "success");
+    await loadCaregivers();
+  } catch(e) {
+    showToast("Error: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Grant Access";
+  }
+}
+
+async function revokeAccess(email) {
+  try {
+    await deleteDoc(doc(db, "users", currentUser.uid, "sharedAccess", email));
+    showToast("Access revoked.", "");
+    await loadCaregivers();
+  } catch(e) {
+    showToast("Error: " + e.message, "error");
+  }
+}
+
+async function logout() {
+  await signOut(auth);
+  window.location = "index.html";
+}
+
+window.grantAccess = grantAccess;
+window.revokeAccess = revokeAccess;
+window.logout = logout;
 </script>
 </body>
 </html>
