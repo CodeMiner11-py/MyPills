@@ -397,7 +397,7 @@ document.getElementById("msgSendBtn").addEventListener("click", async () => {
   const fullMessage = `[${selectedReason}]\n\n${message}`;
 
   try {
-    const res = await fetch("https://api.mypills.kidslearninglab.com/noter", {
+    const res = await fetch("https://api.mypills.kidslearninglab.com/add_note", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
