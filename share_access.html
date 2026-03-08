@@ -411,7 +411,7 @@ document.getElementById("msgSendBtn").addEventListener("click", async () => {
 
     closeModal("msgModal");
     resetMsgModal();
-    showToast("Message sent! 💬", "success");
+    showToast("Message sent!", "success");
   } catch (e) {
     showToast("Failed to send message", "error");
     btn.disabled = false;
@@ -442,7 +442,7 @@ function setupRealtimeList(uid) {
           <div class="caregiver-email">${email}</div>
         </div>
         <div class="caregiver-actions">
-          <button class="msg-btn" data-email="${email}">💬 Message</button>
+          <button class="msg-btn" data-email="${email}">Message</button>
           <button class="revoke-btn" data-email="${email}">Revoke</button>
         </div>
       </div>
