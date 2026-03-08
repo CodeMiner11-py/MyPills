@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" type="image/png" href="logo.png">
+    <title>Chat – MyPills</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+      body{background:#f7f7f5;min-height:100vh;color:#1a1a1a;}
+      header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;}
+      .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+      .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+      .header-user{font-size:13px;color:#888;margin-right:12px;}
+      .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;}
+      .btn-logout:hover{background:#c0392b;color:#fff;}
+      .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+      .page-header{margin-bottom:32px;}
+      .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
+      .back-link:hover{color:#c0392b;}
+      .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
+      .chat-box{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.05);height:400px;overflow-y:auto;margin-bottom:16px;}
+      .message{padding:8px 14px;margin:4px 0;border-radius:14px;max-width:80%;word-break:break-word;}
+      .sent{background:#c0392b;color:#fff;margin-left:auto;}
+      .received{background:#eee;margin-right:auto;}
+      .msg-input{display:flex;gap:12px;}
+      .msg-input textarea{flex:1;padding:12px;border:1.5px solid #eee;border-radius:12px;background:#fafafa;resize:none;font-family:'Plus Jakarta Sans',sans-serif;}
+      .send-btn{padding:12px 18px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+      .send-btn:hover{transform:translateY(-1px);}
+      @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+      .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all 0.4s ease;z-index:1000;pointer-events:none;}
+      .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+      .toast.error{background:#c0392b;}
+      .toast.success{background:#27ae60;}
+    </style>
+</head>
+<body>
+<header>
+  <a class="logo" href="app.html"><img src="pill.png"> MyPills</a>
+  <div>
+    <span class="header-user" id="userHeaderEmail"></span>
+    <button class="btn-logout" id="logoutBtn">Log Out</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-header">
+    <a class="back-link" href="app.html">← Back to dashboard</a>
+    <h1 id="chatHeader">Chat</h1>
+  </div>
+
+  <div class="chat-box" id="chatBox">Loading messages…</div>
+
+  <div class="msg-input">
+    <textarea id="msgInput" placeholder="Type your message…"></textarea>
+    <button class="send-btn" id="sendBtn">Send</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
+  authDomain: "mypills-f768a.firebaseapp.com",
+  projectId: "mypills-f768a",
+  storageBucket: "mypills-f768a.appspot.com",
+  messagingSenderId: "150822030429",
+  appId: "1:150822030429:web:6805cc679e0a35f3d9b4"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (type ? " "+type : "");
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location = "continue.html"; return; }
+    document.getElementById("userHeaderEmail").textContent = user.email;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get("chatId");
+    const chatWithEmail = urlParams.get("name");
+    document.getElementById("chatHeader").textContent = "Chat with " + chatWithEmail;
+
+    const chatBox = document.getElementById("chatBox");
+    const input = document.getElementById("msgInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // Listen to messages in this chat
+    const messagesRef = collection(db, "messages", chatId, "messages");
+    const q = query(messagesRef, orderBy("timestamp"));
+    onSnapshot(q, snapshot => {
+      chatBox.innerHTML = "";
+      snapshot.docs.forEach(docSnap => {
+        const m = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "message " + (m.from === user.uid ? "sent" : "received");
+        div.textContent = m.text;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      sendBtn.disabled = true;
+      try {
+        await addDoc(messagesRef, {
+          from: user.uid,
+          text,
+          timestamp: new Date()
+        });
+        input.value = "";
+      } catch (e) {
+        showToast("Failed to send message", "error");
+      } finally { sendBtn.disabled = false; }
+    });
+  });
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () =>
+  signOut(auth).then(() => window.location.href = "index.html")
+);
+</script>
+</body>
+</html>
