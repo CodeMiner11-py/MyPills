@@ -140,7 +140,7 @@ textarea{resize:vertical;min-height:90px;}
     <a class="back-link" onclick="history.back()" style="cursor:pointer;">← Back to previous page</a>
     <h1>Add <span>Medication</span></h1>
     <p class="page-sub" id="pageSub">Fill in the details below to add a new medication.</p>
-    <a href="barcode.html" style="display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:9px 16px;background:#fff0ef;color:#c0392b;border:1.5px solid #f0c8c4;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;">
+    <a href="barcode_scanner.html" style="display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:9px 16px;background:#fff0ef;color:#c0392b;border:1.5px solid #f0c8c4;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;">
       <span class="material-symbols-outlined" style="font-size:17px;">barcode_reader</span> Scan a barcode instead
     </a>
   </div>
@@ -252,7 +252,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
 });
 
 // ── PRE-FILL FROM BARCODE SCANNER ─────────────────────────────────
-// barcode.html applies these rules before redirecting here:
+// barcode_scanner.html applies these rules before redirecting here:
 //   name        → "{Brand} (from {Manufacturer})"  or just Brand if no mfr
 //   dosageValue → numeric part of strength string   e.g. "500" from "500 MG"
 //   dosageUnit  → unit part                         e.g. "MG"

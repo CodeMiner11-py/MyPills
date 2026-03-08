@@ -27,8 +27,8 @@ body{
 .pill-icon{
   font-size:4rem;
   margin-bottom:24px;
-  display:block;
-  animation:wobble 2s ease-in-out infinite;
+  display:inline-block;
+  will-change:transform;
 }
 
 .code{
@@ -55,7 +55,6 @@ body{
   line-height:1.6;
 }
 
-/* PROGRESS */
 .progress-wrap{
   background:#fff;
   border-radius:20px;
@@ -72,9 +71,7 @@ body{
   margin-bottom:10px;
 }
 
-.progress-label span:last-child{
-  color:#c9a84c;
-}
+.progress-label span:last-child{ color:#c9a84c; }
 
 .progress-track{
   width:100%;
@@ -88,38 +85,25 @@ body{
 .progress-fill{
   height:100%;
   border-radius:100px;
-  background:linear-gradient(90deg, #f39c12, #f1c40f);
+  background:linear-gradient(90deg,#f39c12,#f1c40f);
   width:0%;
   transition:width 0.1s linear;
   box-shadow:0 0 8px rgba(241,196,15,0.4);
 }
 
-.redirect-text{
-  font-size:12px;
-  color:#bbb;
-  text-align:center;
-}
-
-.redirect-text span{
-  color:#c0392b;
-  font-weight:600;
-}
+.redirect-text{ font-size:12px;color:#bbb;text-align:center; }
+.redirect-text span{ color:#c0392b;font-weight:600; }
 
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(24px);}
   to{opacity:1;transform:translateY(0);}
-}
-
-@keyframes wobble{
-  0%,100%{transform:rotate(-8deg);}
-  50%{transform:rotate(8deg);}
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <span class="pill-icon">💊</span>
+  <span class="pill-icon" id="pill">💊</span>
   <div class="code">404</div>
   <div class="title">Sorry, no medications here!</div>
   <div class="subtitle">This page doesn't exist. We'll get you back on track in a moment.</div>
@@ -150,13 +134,40 @@ const firebaseConfig = {
   measurementId: "G-4CSFQDQG8S"
 };
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// ── ACCELERATING SPIN ─────────────────────────────────────────────
+// Propeller ramp-up: starts slow (~0.3 rot/sec), accelerates to ~25 rot/sec.
+// Uses requestAnimationFrame + exponential speed curve for smoothness.
+const pill      = document.getElementById("pill");
+let angle       = 0;        // accumulated degrees
+let degsPerMs   = 0.108;    // initial speed  (0.3 rot/sec = 108 deg/sec)
+const maxSpeed  = 9.0;      // peak speed     (25 rot/sec  = 9000 deg/sec → 9 deg/ms)
+const accel     = 0.0020;   // deg/ms gained per ms — tweak to taste
+let lastTime    = null;
+
+function spinFrame(ts) {
+  if (lastTime === null) lastTime = ts;
+  const dt = Math.min(ts - lastTime, 64); // cap dt to avoid jump on tab-switch
+  lastTime = ts;
+
+  // Ramp up speed exponentially until max
+  if (degsPerMs < maxSpeed) {
+    degsPerMs = Math.min(degsPerMs * (1 + 0.003 * dt) + accel * dt, maxSpeed);
+  }
+
+  angle = (angle + degsPerMs * dt) % 360;
+  pill.style.transform = `rotate(${angle}deg)`;
+  requestAnimationFrame(spinFrame);
+}
+requestAnimationFrame(spinFrame);
+
+// ── REDIRECT PROGRESS BAR ─────────────────────────────────────────
 const DURATION = 5000;
 const INTERVAL = 50;
-let elapsed = 0;
-let dest = "index.html";
+let elapsed   = 0;
+let dest      = "index.html";
 let destReady = false;
 
 setPersistence(auth, browserLocalPersistence).then(() => {
@@ -167,19 +178,17 @@ setPersistence(auth, browserLocalPersistence).then(() => {
   });
 });
 
-// start bar immediately, redirect when both bar done + auth resolved
-const fill = document.getElementById("progressFill");
+const fill  = document.getElementById("progressFill");
 const label = document.getElementById("pctLabel");
 
 const timer = setInterval(() => {
   elapsed += INTERVAL;
   const pct = Math.min(Math.round((elapsed / DURATION) * 100), 100);
-  fill.style.width = pct + "%";
+  fill.style.width  = pct + "%";
   label.textContent = pct + "%";
 
   if (elapsed >= DURATION) {
     clearInterval(timer);
-    // wait for auth if not yet resolved
     const go = () => window.location = dest;
     destReady ? go() : setTimeout(go, 500);
   }
