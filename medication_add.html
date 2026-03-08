@@ -4,9 +4,9 @@
     <link rel="icon" type="image/png" href="logo.png">
 <title>New Medication – MyPills</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <style>
 *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
-
 body{background:#f7f7f5;min-height:100vh;}
 
 header{
@@ -29,30 +29,44 @@ header{
 }
 .btn-logout:hover{background:#c0392b;color:#fff;}
 
-/* PAGE */
-.page{
-  max-width:560px;
-  margin:0 auto;
-  padding:48px 20px;
-  animation:fadeUp .45s ease both;
-}
+.page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
 
 .page-header{margin-bottom:32px;}
 .back-link{
   display:inline-flex;align-items:center;gap:6px;
   font-size:13px;color:#aaa;text-decoration:none;
-  margin-bottom:16px;
-  transition:color .2s;
+  margin-bottom:16px;transition:color .2s;
 }
 .back-link:hover{color:#c0392b;}
 .page h1{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;}
 .page h1 span{color:#c0392b;}
 .page-sub{font-size:0.9rem;color:#999;margin-top:6px;}
 
-/* CARD */
+/* SCAN BANNER */
+.scan-banner{
+  background:linear-gradient(135deg,#fff0ef,#fff8f7);
+  border:1.5px solid #f0d0ce;
+  border-radius:14px;
+  padding:14px 18px;
+  margin-bottom:24px;
+  display:none;
+  align-items:center;
+  gap:12px;
+}
+.scan-banner.show{display:flex;}
+.scan-banner-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:#c0392b;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.scan-banner-icon .material-symbols-outlined{font-size:18px;color:#fff;}
+.scan-banner-text{flex:1;}
+.scan-banner-title{font-size:13px;font-weight:700;color:#c0392b;}
+.scan-banner-sub{font-size:12px;color:#aaa;margin-top:2px;line-height:1.5;}
+.scan-banner-clear{background:none;border:none;color:#ccc;cursor:pointer;font-size:18px;line-height:1;padding:2px;}
+.scan-banner-clear:hover{color:#c0392b;}
+
 .card{
-  background:#fff;
-  border-radius:20px;
+  background:#fff;border-radius:20px;
   padding:36px;
   box-shadow:0 8px 40px rgba(0,0,0,0.07);
 }
@@ -60,15 +74,10 @@ header{
 .form-group{margin-bottom:22px;}
 label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:7px;}
 input,textarea,select{
-  width:100%;
-  padding:11px 14px;
-  border:1.5px solid #e8e8e8;
-  border-radius:10px;
-  font-size:14px;
-  color:#1a1a1a;
-  background:#fafafa;
-  transition:border-color .2s,box-shadow .2s;
-  outline:none;
+  width:100%;padding:11px 14px;
+  border:1.5px solid #e8e8e8;border-radius:10px;
+  font-size:14px;color:#1a1a1a;background:#fafafa;
+  transition:border-color .2s,box-shadow .2s;outline:none;
   font-family:'Plus Jakarta Sans',sans-serif;
 }
 input:focus,textarea:focus,select:focus{
@@ -76,21 +85,20 @@ input:focus,textarea:focus,select:focus{
   box-shadow:0 0 0 3px rgba(192,57,43,0.08);
   background:#fff;
 }
+/* Subtle tint for pre-filled fields */
+input.prefilled,textarea.prefilled,select.prefilled{
+  background:#fffaf9;border-color:#f0c8c4;
+}
 textarea{resize:vertical;min-height:90px;}
 
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-
-.optional-tag{
-  font-size:11px;font-weight:400;color:#bbb;margin-left:6px;
-}
+.optional-tag{font-size:11px;font-weight:400;color:#bbb;margin-left:6px;}
 
 .submit-btn{
-  width:100%;
-  padding:14px;
+  width:100%;padding:14px;
   background:#c0392b;color:#fff;
   border:none;border-radius:10px;
-  font-size:15px;font-weight:600;
-  cursor:pointer;
+  font-size:15px;font-weight:600;cursor:pointer;
   transition:all .2s ease;
   box-shadow:0 4px 14px rgba(192,57,43,0.3);
   margin-top:8px;
@@ -104,9 +112,7 @@ textarea{resize:vertical;min-height:90px;}
   background:#1a1a1a;color:#fff;
   padding:12px 24px;border-radius:10px;
   font-size:14px;font-weight:500;
-  opacity:0;pointer-events:none;
-  transition:all .3s ease;
-  z-index:999;
+  opacity:0;pointer-events:none;transition:all .3s ease;z-index:999;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.error{background:#c0392b;}
@@ -116,18 +122,13 @@ textarea{resize:vertical;min-height:90px;}
 .time-row label{font-size:12px;color:#888;font-weight:500;white-space:nowrap;min-width:70px;margin:0;}
 .time-row input{flex:1;}
 
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(24px);}
-  to{opacity:1;transform:translateY(0);}
-}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 </style>
 </head>
 <body>
 
 <header>
-  <a class="logo" href="index.html">
-    <img src="pill.png"> MyPills
-  </a>
+  <a class="logo" href="index.html"><img src="pill.png"> MyPills</a>
   <div class="header-right">
     <span class="header-user" id="userEmail"></span>
     <button class="btn-logout" onclick="logout()">Log Out</button>
@@ -136,12 +137,25 @@ textarea{resize:vertical;min-height:90px;}
 
 <div class="page">
   <div class="page-header">
-    <a class="back-link" href="app.html">← Back to dashboard</a>
+    <a class="back-link" id="backLink" href="app.html">← Back to dashboard</a>
     <h1>Add <span>Medication</span></h1>
-    <p class="page-sub">Fill in the details below to add a new medication.</p>
+    <p class="page-sub" id="pageSub">Fill in the details below to add a new medication.</p>
+  </div>
+
+  <!-- Shown only when arriving from the barcode scanner -->
+  <div class="scan-banner" id="scanBanner">
+    <div class="scan-banner-icon">
+      <span class="material-symbols-outlined">barcode_reader</span>
+    </div>
+    <div class="scan-banner-text">
+      <div class="scan-banner-title">Pre-filled from barcode scan</div>
+      <div class="scan-banner-sub" id="scanBannerSub">Review the fields below and complete the schedule and dates.</div>
+    </div>
+    <button class="scan-banner-clear" onclick="clearScanData()" title="Clear scanned data">✕</button>
   </div>
 
   <div class="card">
+
     <div class="form-group">
       <label>Medication Name</label>
       <input type="text" id="name" placeholder="e.g. Metformin">
@@ -151,9 +165,14 @@ textarea{resize:vertical;min-height:90px;}
       <label>Dosage</label>
       <div style="display:flex;gap:10px;">
         <input type="number" id="dosageValue" placeholder="e.g. 500" min="0" step="any" style="flex:1;">
-        <select id="dosageUnit" style="width:110px;">
+        <select id="dosageUnit" style="width:130px;">
           <option value="MG">mg</option>
+          <option value="MCG">mcg</option>
           <option value="G">g</option>
+          <option value="ML">mL</option>
+          <option value="IU">IU</option>
+          <option value="MEQ">mEq</option>
+          <option value="%">%</option>
         </select>
       </div>
     </div>
@@ -216,10 +235,9 @@ const firebaseConfig = {
   measurementId: "G-4CSFQDQG8S"
 };
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
-
+const db   = getFirestore(app);
 let currentUser = null;
 
 setPersistence(auth, browserLocalPersistence).then(() => {
@@ -230,6 +248,78 @@ setPersistence(auth, browserLocalPersistence).then(() => {
   });
 });
 
+// ── PRE-FILL FROM BARCODE SCANNER ─────────────────────────────────
+// barcode.html applies these rules before redirecting here:
+//   name        → "{Brand} (from {Manufacturer})"  or just Brand if no mfr
+//   dosageValue → numeric part of strength string   e.g. "500" from "500 MG"
+//   dosageUnit  → unit part                         e.g. "MG"
+//   notes       → all other fields joined as lines:
+//                 Generic, Form, Route, Type, NDC, RxCUI, Source
+window.addEventListener("DOMContentLoaded", () => {
+  const p           = new URLSearchParams(window.location.search);
+  const name        = p.get("name")        || "";
+  const dosageValue = p.get("dosageValue") || "";
+  const dosageUnit  = p.get("dosageUnit")  || "";
+  const notes       = p.get("notes")       || "";
+  const fromScan    = p.has("name");           // was redirected from scanner
+
+  if (fromScan && name) {
+    // Fill text/number fields
+    setField("name",        name);
+    setField("dosageValue", dosageValue);
+    setField("notes",       notes);
+
+    // Select matching dosage unit
+    if (dosageUnit) {
+      const sel = document.getElementById("dosageUnit");
+      const opt = [...sel.options].find(o => o.value === dosageUnit.toUpperCase());
+      if (opt) { sel.value = opt.value; sel.classList.add("prefilled"); }
+    }
+
+    // Show banner with drug name
+    const banner = document.getElementById("scanBanner");
+    banner.classList.add("show");
+    document.getElementById("scanBannerSub").textContent =
+      `"${name}" was pre-filled. Complete the schedule and start date to save.`;
+
+    // Update back link → scanner
+    const backLink = document.getElementById("backLink");
+    backLink.href        = "barcode.html";
+    backLink.textContent = "← Back to scanner";
+
+    // Update subtitle
+    document.getElementById("pageSub").textContent =
+      "Scanned data pre-filled. Complete schedule and dates below.";
+  }
+});
+
+function setField(id, value) {
+  if (!value && value !== 0) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = value;
+  el.classList.add("prefilled");
+}
+
+window.clearScanData = function() {
+  ["name","dosageValue","notes"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ""; el.classList.remove("prefilled"); }
+  });
+  const sel = document.getElementById("dosageUnit");
+  sel.value = "MG"; sel.classList.remove("prefilled");
+  document.getElementById("scanBanner").classList.remove("show");
+
+  // Restore defaults
+  document.getElementById("backLink").href        = "app.html";
+  document.getElementById("backLink").textContent = "← Back to dashboard";
+  document.getElementById("pageSub").textContent  = "Fill in the details below to add a new medication.";
+
+  // Clean URL without reloading
+  history.replaceState({}, "", window.location.pathname);
+};
+
+// ── TOAST ─────────────────────────────────────────────────────────
 function showToast(msg, isError = false) {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -237,20 +327,20 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.className = "toast", 3000);
 }
 
+// ── TIME PICKERS ──────────────────────────────────────────────────
 function updateTimePickers() {
   const count = parseInt(document.getElementById("scheduleCount").value) || 0;
-  const unit = document.getElementById("scheduleUnit").value;
+  const unit  = document.getElementById("scheduleUnit").value;
   const container = document.getElementById("timeFields");
   container.innerHTML = "";
   if (count === 0) return;
 
-  const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const DAYS   = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
   for (let i = 1; i <= count; i++) {
     const row = document.createElement("div");
     row.className = "time-row";
-
     let inner = `<label>Dose ${i}</label>`;
 
     if (unit === "HOURLY") {
@@ -262,7 +352,7 @@ function updateTimePickers() {
     } else if (unit === "DAILY") {
       inner += `<input type="time" id="doseTime_${i}" required style="flex:1;">`;
     } else if (unit === "WEEKLY") {
-      const dayOpts = DAYS.map(d => `<option value="${d}">${d}</option>`).join("");
+      const dayOpts = DAYS.map(d=>`<option value="${d}">${d}</option>`).join("");
       inner += `<select id="doseDay_${i}" style="flex:1;">${dayOpts}</select>
                 <input type="time" id="doseTime_${i}" required style="flex:1;">`;
     } else if (unit === "MONTHLY") {
@@ -270,10 +360,10 @@ function updateTimePickers() {
       inner += `<select id="doseDay_${i}" style="flex:1;">${dayNums}</select>
                 <input type="time" id="doseTime_${i}" required style="flex:1;">`;
     } else if (unit === "YEARLY") {
-      const monthOpts = MONTHS.map((m,idx) => `<option value="${idx+1}">${m}</option>`).join("");
-      const dayNums = Array.from({length:31},(_,k)=>`<option value="${k+1}">${k+1}</option>`).join("");
+      const monthOpts = MONTHS.map((m,idx)=>`<option value="${idx+1}">${m}</option>`).join("");
+      const dayNums   = Array.from({length:31},(_,k)=>`<option value="${k+1}">${k+1}</option>`).join("");
       inner += `<select id="doseMonth_${i}" style="flex:1;">${monthOpts}</select>
-                <select id="doseDay_${i}" style="flex:1;">${dayNums}</select>
+                <select id="doseDay_${i}"   style="flex:1;">${dayNums}</select>
                 <input type="time" id="doseTime_${i}" required style="flex:1;">`;
     }
 
@@ -282,6 +372,7 @@ function updateTimePickers() {
   }
 }
 
+// ── SAVE ──────────────────────────────────────────────────────────
 async function saveMedication() {
   const name          = document.getElementById("name").value.trim();
   const dosageValue   = document.getElementById("dosageValue").value.trim();
@@ -304,44 +395,34 @@ async function saveMedication() {
     const t = document.getElementById(`doseTime_${i}`)?.value;
     if (t === undefined || t === "") { showToast(`Please set a time for Dose ${i}.`, true); return; }
     const entry = { time: t };
-    if (scheduleUnit === "WEEKLY") {
-      entry.day = document.getElementById(`doseDay_${i}`)?.value;
-    } else if (scheduleUnit === "MONTHLY") {
-      entry.day = parseInt(document.getElementById(`doseDay_${i}`)?.value);
-    } else if (scheduleUnit === "YEARLY") {
+    if (scheduleUnit === "WEEKLY")  entry.day   = document.getElementById(`doseDay_${i}`)?.value;
+    if (scheduleUnit === "MONTHLY") entry.day   = parseInt(document.getElementById(`doseDay_${i}`)?.value);
+    if (scheduleUnit === "YEARLY") {
       entry.month = parseInt(document.getElementById(`doseMonth_${i}`)?.value);
       entry.day   = parseInt(document.getElementById(`doseDay_${i}`)?.value);
     }
     times.push(entry);
   }
 
-  const dosage   = [dosageValue, dosageUnit];
-  const schedule = [count, scheduleUnit];
-
   const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.textContent = "Saving...";
+  btn.disabled = true; btn.textContent = "Saving...";
 
   try {
-    await addDoc(
-      collection(db, "users", currentUser.uid, "medications"),
-      {
-        name,
-        dosage,
-        schedule,
-        times,
-        startDate:  Timestamp.fromDate(new Date(startRaw)),
-        stopDate:   stopRaw  ? Timestamp.fromDate(new Date(stopRaw))  : null,
-        expiryDate: expRaw   ? Timestamp.fromDate(new Date(expRaw))   : null,
-        notes:      notes || ""
-      }
-    );
+    await addDoc(collection(db, "users", currentUser.uid, "medications"), {
+      name,
+      dosage:     [dosageValue, dosageUnit],
+      schedule:   [count, scheduleUnit],
+      times,
+      startDate:  Timestamp.fromDate(new Date(startRaw)),
+      stopDate:   stopRaw ? Timestamp.fromDate(new Date(stopRaw))  : null,
+      expiryDate: expRaw  ? Timestamp.fromDate(new Date(expRaw))   : null,
+      notes:      notes || ""
+    });
     showToast("Medication saved!");
     setTimeout(() => window.location = "app.html", 1200);
   } catch(e) {
     showToast("Error: " + e.message, true);
-    btn.disabled = false;
-    btn.textContent = "Save Medication";
+    btn.disabled = false; btn.textContent = "Save Medication";
   }
 }
 
@@ -350,9 +431,9 @@ async function logout() {
   window.location = "index.html";
 }
 
-window.saveMedication = saveMedication;
+window.saveMedication    = saveMedication;
 window.updateTimePickers = updateTimePickers;
-window.logout = logout;
+window.logout            = logout;
 </script>
 </body>
 </html>
