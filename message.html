@@ -13,26 +13,21 @@
     .header-user{font-size:13px;color:#888;margin-right:12px;}
     .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;}
     .btn-logout:hover{background:#c0392b;color:#fff;}
-    .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
-    .page-header{margin-bottom:32px;}
-    .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
-    .back-link:hover{color:#c0392b;}
-    .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
-    .page h1 span{color:#c0392b;}
-    .chat-list{margin-bottom:24px;}
-    .chat-user{display:flex;align-items:center;justify-content:space-between;padding:16px;background:#fcfcfc;border:1px solid #f0f0ee;border-radius:14px;margin-bottom:12px;cursor:pointer;}
-    .chat-user:hover{background:#fff0ef;}
-    .chat-avatar{width:36px;height:36px;border-radius:10px;background:#fff0ef;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c0392b;}
-    .chat-email{font-size:14px;font-weight:600;color:#1a1a1a;}
-    #chatBox{height:400px;overflow-y:auto;background:#fff;border-radius:12px;padding:16px;border:1.5px solid #eee;margin-bottom:16px;}
-    .message{padding:10px 14px;border-radius:12px;margin-bottom:8px;max-width:75%;word-wrap:break-word;}
-    .sent{background:#c0392b;color:#fff;margin-left:auto;}
-    .received{background:#eee;color:#1a1a1a;margin-right:auto;}
-    .msg-input{display:flex;gap:10px;}
-    .msg-input input{flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid #eee;}
-    .msg-input button{padding:12px 16px;background:#c0392b;color:#fff;border:none;border-radius:12px;cursor:pointer;}
-    .msg-input button:disabled{opacity:0.6;cursor:not-allowed;}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .page{max-width:560px;margin:0 auto;padding:48px 20px;}
+    .chat-select{margin-bottom:24px;}
+    select{width:100%;padding:12px;border-radius:12px;border:1.5px solid #eee;font-size:14px;background:#fafafa;outline:none;}
+    .messages{background:#fff;border-radius:20px;padding:20px;height:400px;overflow-y:auto;margin-bottom:16px;box-shadow:0 8px 40px rgba(0,0,0,0.05);}
+    .msg{margin-bottom:12px;padding:10px 14px;border-radius:12px;max-width:70%;line-height:1.4;}
+    .msg.mine{background:#c0392b;color:#fff;margin-left:auto;}
+    .msg.other{background:#eee;margin-right:auto;color:#1a1a1a;}
+    .msg-input{display:flex;gap:12px;}
+    .msg-input input{flex:1;padding:12px;border-radius:12px;border:1.5px solid #eee;outline:none;font-size:14px;}
+    .msg-input button{padding:12px 16px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .msg-input button:hover{transform:translateY(-1px);}
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all 0.4s ease;z-index:1000;pointer-events:none;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .toast.error{background:#c0392b;}
+    .toast.success{background:#27ae60;}
   </style>
 </head>
 <body>
@@ -46,27 +41,23 @@
 </header>
 
 <div class="page">
-  <div class="page-header">
-    <a class="back-link" href="app.html">← Back to dashboard</a>
-    <h1>Chat <span>Messages</span></h1>
-    <p class="page-sub">Select a caregiver or patient to chat with.</p>
+  <div class="chat-select">
+    <label>Select a person to chat with:</label>
+    <select id="personSelect"><option>Loading...</option></select>
   </div>
-
-  <div class="chat-list" id="chatList">Loading...</div>
-
-  <div id="chatSection" style="display:none;">
-    <div id="chatBox"></div>
-    <div class="msg-input">
-      <input type="text" id="msgInput" placeholder="Type a message...">
-      <button id="sendBtn">Send</button>
-    </div>
+  <div class="messages" id="messages"></div>
+  <div class="msg-input">
+    <input type="text" id="msgInput" placeholder="Type a message…">
+    <button id="sendBtn">Send</button>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, doc, collection, query, orderBy, onSnapshot, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, doc, collection, addDoc, onSnapshot, query, orderBy, getDocs, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -81,88 +72,85 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUID, selectedUID, chatRef;
-
-function showChats(userData){
-  const listDiv = document.getElementById("chatList");
-  const caregivers = userData.caregivers || [];
-  const patients = userData.patients || [];
-  const combined = [...caregivers, ...patients];
-  if(combined.length===0){ listDiv.innerHTML="<div style='text-align:center;padding:20px;color:#bbb;'>No chats available.</div>"; return;}
-  listDiv.innerHTML = combined.map(email=>{
-    return `<div class="chat-user" data-email="${email}">
-      <div class="chat-avatar">${email[0].toUpperCase()}</div>
-      <div class="chat-email">${email}</div>
-    </div>`;
-  }).join('');
-
-  listDiv.querySelectorAll(".chat-user").forEach(el=>{
-    el.addEventListener("click", async ()=>{
-      selectedUID = await getUIDFromEmail(el.dataset.email);
-      initChat(currentUID, selectedUID);
-      document.getElementById("chatSection").style.display="block";
-    });
-  });
-}
-
-// Fake function to get UID from email; replace with actual mapping from your 'users' collection
-async function getUIDFromEmail(email){
-  const q = doc(db,"users",email.replace(/[.@]/g,"_"));
-  const snap = await getDoc(q);
-  return snap.exists()?snap.id:null;
-}
-
-let unsubscribe;
-
-async function initChat(userUID, otherUID){
-  if(unsubscribe) unsubscribe(); // remove previous listener
-  const chatId1 = userUID+"_"+otherUID;
-  const chatId2 = otherUID+"_"+userUID;
-
-  const doc1 = await getDoc(doc(db,"messages",chatId1));
-  const doc2 = await getDoc(doc(db,"messages",chatId2));
-
-  let chatId;
-  if(doc1.exists()) chatId = chatId1;
-  else if(doc2.exists()) chatId = chatId2;
-  else chatId = chatId1;
-
-  chatRef = collection(db,"messages",chatId,"messages");
-
-  unsubscribe = onSnapshot(query(chatRef, orderBy("timestamp")), snapshot=>{
-    const chatBox = document.getElementById("chatBox");
-    chatBox.innerHTML="";
-    snapshot.docs.forEach(d=>{
-      const m = d.data();
-      const div = document.createElement("div");
-      div.className = "message "+(m.from===userUID?"sent":"received");
-      div.textContent = m.text;
-      chatBox.appendChild(div);
-    });
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
-}
-
-document.getElementById("sendBtn").addEventListener("click", async ()=>{
-  const input = document.getElementById("msgInput");
-  const text = input.value.trim();
-  if(!text || !chatRef) return;
-  await addDoc(chatRef,{from:currentUID,text,timestamp:new Date()});
-  input.value="";
-});
-
-setPersistence(auth,browserLocalPersistence).then(()=>{
-  onAuthStateChanged(auth,user=>{
-    if(!user){ window.location="continue.html"; return;}
-    currentUID = user.uid;
-    document.getElementById("userHeaderEmail").textContent = user.email;
-    getDoc(doc(db,"users",currentUID)).then(snap=>{
-      if(snap.exists()) showChats(snap.data());
-    });
-  });
-});
+const toast = document.getElementById("toast");
+function showToast(msg, type=""){toast.textContent=msg;toast.className="toast show"+(type?" "+type:"");setTimeout(()=>toast.classList.remove("show"),3500);}
 
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location.href="index.html"));
+
+let currentUser=null;
+let chatRef=null;
+let unsubscribe=null;
+
+async function getUIDFromEmail(email){
+  const usersRef=collection(db,"users");
+  const q=query(usersRef,where("email","==",email));
+  const snap=await getDocs(q);
+  if(!snap.empty)return snap.docs[0].id;
+  return null;
+}
+
+function scrollToBottom(){const m=document.getElementById("messages");m.scrollTop=m.scrollHeight;}
+
+setPersistence(auth,browserLocalPersistence).then(()=>{
+  onAuthStateChanged(auth,async user=>{
+    if(!user){window.location="continue.html";return;}
+    currentUser=user;
+    document.getElementById("userHeaderEmail").textContent=user.email;
+
+    const usersDoc=doc(db,"users",user.uid);
+    const snap=await getDocs(collection(db,"users"));
+    const select=document.getElementById("personSelect");
+    select.innerHTML="";
+
+    // Add caregivers
+    const userSnap=await getDocs(collection(db,"users"));
+    for(const u of userSnap.docs){
+      const data=u.data();
+      if((data.caregivers||[]).includes(user.email)||u.id===user.uid) continue;
+      if((data.caregivers||[]).includes(user.email)||data.patients?.includes(user.email)) select.innerHTML+=`<option value="${data.email}">${data.email}</option>`;
+    }
+
+    select.addEventListener("change",()=>{setupChat(select.value);});
+    if(select.options.length>0) setupChat(select.value);
+  });
+});
+
+async function setupChat(email){
+  if(unsubscribe) unsubscribe();
+  const otherUID=await getUIDFromEmail(email);
+  if(!otherUID){showToast("User not found","error");return;}
+  const ids=[currentUser.uid,otherUID].sort();
+  const chatID=ids.join("_");
+  const messagesDiv=document.getElementById("messages");
+  messagesDiv.innerHTML="Loading…";
+
+  const q=query(collection(db,"messages",chatID,"msgs"),orderBy("timestamp"));
+  unsubscribe=onSnapshot(q,snap=>{
+    messagesDiv.innerHTML="";
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const div=document.createElement("div");
+      div.className="msg "+(d.senderUID===currentUser.uid?"mine":"other");
+      div.textContent=d.message;
+      messagesDiv.appendChild(div);
+    });
+    scrollToBottom();
+  });
+
+  document.getElementById("sendBtn").onclick=async ()=>{
+    const msgInput=document.getElementById("msgInput");
+    const text=msgInput.value.trim();
+    if(!text)return;
+    msgInput.value="";
+    try{
+      await addDoc(collection(db,"messages",chatID,"msgs"),{
+        message:text,
+        senderUID:currentUser.uid,
+        timestamp:new Date()
+      });
+    }catch(e){showToast("Failed to send","error");}
+  };
+}
 </script>
 </body>
 </html>
