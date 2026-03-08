@@ -1,44 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" type="image/png" href="logo.png">
-    <title>Chat – MyPills</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
-      body{background:#f7f7f5;min-height:100vh;color:#1a1a1a;}
-      header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;}
-      .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
-      .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
-      .header-user{font-size:13px;color:#888;margin-right:12px;}
-      .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;}
-      .btn-logout:hover{background:#c0392b;color:#fff;}
-      .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
-      .page-header{margin-bottom:32px;}
-      .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
-      .back-link:hover{color:#c0392b;}
-      .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
-      .caregiver-list{margin-bottom:24px;}
-      .caregiver-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:12px;cursor:pointer;}
-      .caregiver-info{display:flex;align-items:center;gap:12px;}
-      .caregiver-avatar{width:36px;height:36px;border-radius:10px;background:#fff0ef;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c0392b;}
-      .caregiver-email{font-size:14px;font-weight:600;color:#1a1a1a;}
-      .chat-box{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.05);height:400px;overflow-y:auto;margin-bottom:16px;display:none;}
-      .message{padding:8px 14px;margin:4px 0;border-radius:14px;max-width:80%;word-break:break-word;}
-      .sent{background:#c0392b;color:#fff;margin-left:auto;}
-      .received{background:#eee;margin-right:auto;}
-      .msg-input{display:flex;gap:12px;display:none;}
-      .msg-input textarea{flex:1;padding:12px;border:1.5px solid #eee;border-radius:12px;background:#fafafa;resize:none;font-family:'Plus Jakarta Sans',sans-serif;}
-      .send-btn{padding:12px 18px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;transition:all .2s;}
-      .send-btn:hover{transform:translateY(-1px);}
-      @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-      .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all 0.4s ease;z-index:1000;pointer-events:none;}
-      .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-      .toast.error{background:#c0392b;}
-      .toast.success{background:#27ae60;}
-    </style>
+  <link rel="icon" type="image/png" href="logo.png">
+  <title>Chat – MyPills</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+    body{background:#f7f7f5;min-height:100vh;color:#1a1a1a;}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;}
+    .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;cursor:pointer;color:#1a1a1a;text-decoration:none;}
+    .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+    .header-user{font-size:13px;color:#888;margin-right:12px;}
+    .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;}
+    .btn-logout:hover{background:#c0392b;color:#fff;}
+    .page{max-width:560px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+    .page-header{margin-bottom:32px;}
+    .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#aaa;text-decoration:none;margin-bottom:16px;transition:color .2s;}
+    .back-link:hover{color:#c0392b;}
+    .page h1{font-size:1.7rem;font-weight:700;letter-spacing:-0.02em;}
+    .page h1 span{color:#c0392b;}
+    .chat-list{margin-bottom:24px;}
+    .chat-user{display:flex;align-items:center;justify-content:space-between;padding:16px;background:#fcfcfc;border:1px solid #f0f0ee;border-radius:14px;margin-bottom:12px;cursor:pointer;}
+    .chat-user:hover{background:#fff0ef;}
+    .chat-avatar{width:36px;height:36px;border-radius:10px;background:#fff0ef;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c0392b;}
+    .chat-email{font-size:14px;font-weight:600;color:#1a1a1a;}
+    #chatBox{height:400px;overflow-y:auto;background:#fff;border-radius:12px;padding:16px;border:1.5px solid #eee;margin-bottom:16px;}
+    .message{padding:10px 14px;border-radius:12px;margin-bottom:8px;max-width:75%;word-wrap:break-word;}
+    .sent{background:#c0392b;color:#fff;margin-left:auto;}
+    .received{background:#eee;color:#1a1a1a;margin-right:auto;}
+    .msg-input{display:flex;gap:10px;}
+    .msg-input input{flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid #eee;}
+    .msg-input button{padding:12px 16px;background:#c0392b;color:#fff;border:none;border-radius:12px;cursor:pointer;}
+    .msg-input button:disabled{opacity:0.6;cursor:not-allowed;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  </style>
 </head>
 <body>
+
 <header>
   <a class="logo" href="app.html"><img src="pill.png"> MyPills</a>
   <div>
@@ -50,25 +48,25 @@
 <div class="page">
   <div class="page-header">
     <a class="back-link" href="app.html">← Back to dashboard</a>
-    <h1 id="chatHeader">Select a Person</h1>
+    <h1>Chat <span>Messages</span></h1>
+    <p class="page-sub">Select a caregiver or patient to chat with.</p>
   </div>
 
-  <div class="caregiver-list" id="caregiverList">Loading…</div>
+  <div class="chat-list" id="chatList">Loading...</div>
 
-  <div class="chat-box" id="chatBox"></div>
-
-  <div class="msg-input">
-    <textarea id="msgInput" placeholder="Type your message…"></textarea>
-    <button class="send-btn" id="sendBtn">Send</button>
+  <div id="chatSection" style="display:none;">
+    <div id="chatBox"></div>
+    <div class="msg-input">
+      <input type="text" id="msgInput" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+    </div>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, doc, collection, query, orderBy, onSnapshot, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -83,113 +81,88 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentChatId = null;
+let currentUID, selectedUID, chatRef;
 
-function showToast(msg,type="") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show"+(type?" "+type:"");
-  setTimeout(()=>t.classList.remove("show"),3500);
-}
+function showChats(userData){
+  const listDiv = document.getElementById("chatList");
+  const caregivers = userData.caregivers || [];
+  const patients = userData.patients || [];
+  const combined = [...caregivers, ...patients];
+  if(combined.length===0){ listDiv.innerHTML="<div style='text-align:center;padding:20px;color:#bbb;'>No chats available.</div>"; return;}
+  listDiv.innerHTML = combined.map(email=>{
+    return `<div class="chat-user" data-email="${email}">
+      <div class="chat-avatar">${email[0].toUpperCase()}</div>
+      <div class="chat-email">${email}</div>
+    </div>`;
+  }).join('');
 
-setPersistence(auth, browserLocalPersistence).then(()=>{
-  onAuthStateChanged(auth, async user=>{
-    if(!user){window.location="continue.html";return;}
-    document.getElementById("userHeaderEmail").textContent = user.email;
-
-    const listDiv = document.getElementById("caregiverList");
-    const userDocRef = doc(db,"users",user.uid);
-    onSnapshot(userDocRef,async snap=>{
-      const data = snap.data()||{};
-      const caregivers = data.caregivers||[];
-
-      // Find users where current user is caregiver
-      const allConnected = [...caregivers];
-      // Query users collection for anyone that has you as caregiver
-      // Fetch all users (simplest for small scale)
-      const usersCol = collection(db,"users");
-      onSnapshot(usersCol, usersSnap=>{
-        usersSnap.docs.forEach(d=>{
-          const u = d.data();
-          if(u.caregivers?.includes(user.email) && !allConnected.includes(u.email)){
-            allConnected.push(u.email);
-          }
-        });
-        if(allConnected.length===0){listDiv.innerHTML="No connections.";return;}
-        listDiv.innerHTML = allConnected.map(email=>`
-          <div class="caregiver-row" data-email="${email}">
-            <div class="caregiver-info">
-              <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
-              <div class="caregiver-email">${email}</div>
-            </div>
-          </div>
-        `).join('');
-
-        listDiv.querySelectorAll('.caregiver-row').forEach(row=>{
-          row.addEventListener('click',()=>startChat(user,row.dataset.email));
-        });
-      });
+  listDiv.querySelectorAll(".chat-user").forEach(el=>{
+    el.addEventListener("click", async ()=>{
+      selectedUID = await getUIDFromEmail(el.dataset.email);
+      initChat(currentUID, selectedUID);
+      document.getElementById("chatSection").style.display="block";
     });
   });
-});
+}
 
-document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location="index.html"));
+// Fake function to get UID from email; replace with actual mapping from your 'users' collection
+async function getUIDFromEmail(email){
+  const q = doc(db,"users",email.replace(/[.@]/g,"_"));
+  const snap = await getDoc(q);
+  return snap.exists()?snap.id:null;
+}
 
-async function startChat(user,targetEmail){
-  const chatBox = document.getElementById("chatBox");
-  chatBox.style.display="block";
+let unsubscribe;
 
-  const inputDiv = document.querySelector(".msg-input");
-  inputDiv.style.display="flex";
+async function initChat(userUID, otherUID){
+  if(unsubscribe) unsubscribe(); // remove previous listener
+  const chatId1 = userUID+"_"+otherUID;
+  const chatId2 = otherUID+"_"+userUID;
 
-  const sanitize = s=>s.replace(/[@.]/g,"_");
-  const targetId = sanitize(targetEmail);
-
-  const option1 = user.uid+"_"+targetId;
-  const option2 = targetId+"_"+user.uid;
+  const doc1 = await getDoc(doc(db,"messages",chatId1));
+  const doc2 = await getDoc(doc(db,"messages",chatId2));
 
   let chatId;
+  if(doc1.exists()) chatId = chatId1;
+  else if(doc2.exists()) chatId = chatId2;
+  else chatId = chatId1;
 
-  const doc1 = await getDoc(doc(db,"messages",option1));
-  const doc2 = await getDoc(doc(db,"messages",option2));
+  chatRef = collection(db,"messages",chatId,"messages");
 
-  if(doc1.exists()) chatId = option1;
-  else if(doc2.exists()) chatId = option2;
-  else chatId = option1; // create new chat if none exists
-
-  currentChatId = chatId;
-
-  const messagesRef = collection(db,"messages",chatId,"messages");
-  const q = query(messagesRef,orderBy("timestamp"));
-
-  onSnapshot(q,snapshot=>{
+  unsubscribe = onSnapshot(query(chatRef, orderBy("timestamp")), snapshot=>{
+    const chatBox = document.getElementById("chatBox");
     chatBox.innerHTML="";
-    snapshot.docs.forEach(docSnap=>{
-      const m = docSnap.data();
+    snapshot.docs.forEach(d=>{
+      const m = d.data();
       const div = document.createElement("div");
-      div.className="message "+(m.from===user.uid?"sent":"received");
+      div.className = "message "+(m.from===userUID?"sent":"received");
       div.textContent = m.text;
       chatBox.appendChild(div);
     });
     chatBox.scrollTop = chatBox.scrollHeight;
   });
-
-  document.getElementById("sendBtn").onclick = async ()=>{
-    const text = document.getElementById("msgInput").value.trim();
-    if(!text) return;
-    const btn = document.getElementById("sendBtn");
-    btn.disabled = true;
-    try{
-      await addDoc(messagesRef,{
-        from: user.uid,
-        text,
-        timestamp: new Date()
-      });
-      document.getElementById("msgInput").value = "";
-    } catch(e){ showToast("Failed to send message","error"); }
-    finally{ btn.disabled = false; }
-  };
 }
+
+document.getElementById("sendBtn").addEventListener("click", async ()=>{
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+  if(!text || !chatRef) return;
+  await addDoc(chatRef,{from:currentUID,text,timestamp:new Date()});
+  input.value="";
+});
+
+setPersistence(auth,browserLocalPersistence).then(()=>{
+  onAuthStateChanged(auth,user=>{
+    if(!user){ window.location="continue.html"; return;}
+    currentUID = user.uid;
+    document.getElementById("userHeaderEmail").textContent = user.email;
+    getDoc(doc(db,"users",currentUID)).then(snap=>{
+      if(snap.exists()) showChats(snap.data());
+    });
+  });
+});
+
+document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location.href="index.html"));
 </script>
 </body>
 </html>
