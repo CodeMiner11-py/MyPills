@@ -145,7 +145,7 @@
   <a class="logo" href="app.html"><img src="pill.png"> MyPills</a>
   <div>
     <span class="header-user" id="userHeaderEmail"></span>
-    <button class="btn-logout" onclick="logout()">Log Out</button>
+    <button class="btn-logout" id="logoutBtn">Log Out</button>
   </div>
 </header>
 
@@ -161,7 +161,7 @@
       <label>Caregiver's Email</label>
       <input type="email" id="caregiverEmail" placeholder="caregiver@email.com">
     </div>
-    <button class="submit-btn" id="submitBtn" onclick="promptGrantAccess()">Grant Access</button>
+    <button class="submit-btn" id="submitBtn">Grant Access</button>
   </div>
 
   <div class="card">
@@ -184,8 +184,8 @@
       <span class="modal-warning-text">This person will be able to see all your medication and appointment history. Only share with trusted people.</span>
     </div>
     <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeModal('grantModal')">Cancel</button>
-      <button class="modal-confirm" id="grantConfirmBtn" onclick="confirmGrantAccess()">Grant Access</button>
+      <button class="modal-cancel" id="grantCancelBtn">Cancel</button>
+      <button class="modal-confirm" id="grantConfirmBtn">Grant Access</button>
     </div>
   </div>
 </div>
@@ -204,8 +204,8 @@
       <span class="modal-warning-text">This person will lose access to your data unless you re-add them.</span>
     </div>
     <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeModal('revokeModal')">Cancel</button>
-      <button class="modal-confirm revoke-confirm" id="revokeConfirmBtn" onclick="confirmRevokeAccess()">Remove Access</button>
+      <button class="modal-cancel" id="revokeCancelBtn">Cancel</button>
+      <button class="modal-confirm revoke-confirm" id="revokeConfirmBtn">Remove Access</button>
     </div>
   </div>
 </div>
@@ -214,7 +214,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -240,69 +240,38 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.classList.remove("show"), 3000);
 }
 
-function openModal(id) {
-  document.getElementById(id).classList.add("open");
-}
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-window.closeModal = function(id) {
-  document.getElementById(id).classList.remove("open");
-}
-
-// Close modal when clicking outside
+// Close on backdrop click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove("open");
-  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove("open"); });
 });
 
-setPersistence(auth, browserLocalPersistence).then(() => {
-  onAuthStateChanged(auth, async user => {
-    if (!user) { window.location = "continue.html"; return; }
-    document.getElementById("userHeaderEmail").textContent = user.email;
-    setupRealtimeList(user.uid);
-  });
-});
+// Header buttons
+document.getElementById("logoutBtn").addEventListener("click", () =>
+  signOut(auth).then(() => window.location.href = "index.html")
+);
+document.getElementById("grantCancelBtn").addEventListener("click", () => closeModal("grantModal"));
+document.getElementById("revokeCancelBtn").addEventListener("click", () => closeModal("revokeModal"));
 
-function setupRealtimeList(uid) {
-  onSnapshot(doc(db, "users", uid), (snap) => {
-    const listDiv = document.getElementById("caregiverList");
-    const caregivers = snap.data()?.caregivers || [];
-
-    if (caregivers.length === 0) {
-      listDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#bbb; font-size:14px;">No caregivers added.</div>`;
-      return;
-    }
-
-    listDiv.innerHTML = caregivers.map(email => `
-      <div class="caregiver-row">
-        <div class="caregiver-info">
-          <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
-          <div class="caregiver-email">${email}</div>
-        </div>
-        <button class="revoke-btn" onclick="promptRevokeAccess('${email}')">Revoke</button>
-      </div>
-    `).join('');
-  });
-}
-
-// ── Grant flow ──
-window.promptGrantAccess = function() {
+// Grant button
+document.getElementById("submitBtn").addEventListener("click", () => {
   const emailInp = document.getElementById("caregiverEmail");
   const email = emailInp.value.trim().toLowerCase();
   if (!email.includes('@')) return showToast("Enter a valid email", true);
   pendingGrantEmail = email;
   document.getElementById("grantEmailDisplay").textContent = email;
   openModal("grantModal");
-};
+});
 
-window.confirmGrantAccess = async function() {
+// Confirm grant
+document.getElementById("grantConfirmBtn").addEventListener("click", async () => {
   if (!pendingGrantEmail) return;
   const email = pendingGrantEmail;
   const btn = document.getElementById("grantConfirmBtn");
-  btn.disabled = true;
-  btn.textContent = "Granting…";
+  btn.disabled = true; btn.textContent = "Granting…";
   closeModal("grantModal");
-
   const user = auth.currentUser;
   try {
     await updateDoc(doc(db, "users", user.uid), {
@@ -314,43 +283,65 @@ window.confirmGrantAccess = async function() {
   } catch (e) {
     showToast("Error granting access", true);
   } finally {
-    btn.disabled = false;
-    btn.textContent = "Grant Access";
+    btn.disabled = false; btn.textContent = "Grant Access";
     pendingGrantEmail = null;
   }
-};
+});
 
-// ── Revoke flow ──
-window.promptRevokeAccess = function(email) {
-  pendingRevokeEmail = email;
-  document.getElementById("revokeEmailDisplay").textContent = email;
-  openModal("revokeModal");
-};
-
-window.confirmRevokeAccess = async function() {
+// Confirm revoke
+document.getElementById("revokeConfirmBtn").addEventListener("click", async () => {
   if (!pendingRevokeEmail) return;
   const email = pendingRevokeEmail;
   const btn = document.getElementById("revokeConfirmBtn");
-  btn.disabled = true;
-  btn.textContent = "Removing…";
+  btn.disabled = true; btn.textContent = "Removing…";
   closeModal("revokeModal");
-
   const user = auth.currentUser;
   try {
-    await updateDoc(doc(db, "users", user.uid), {
-      caregivers: arrayRemove(email)
-    });
+    await updateDoc(doc(db, "users", user.uid), { caregivers: arrayRemove(email) });
     showToast("Access revoked");
   } catch (e) {
     showToast("Error revoking access", true);
   } finally {
-    btn.disabled = false;
-    btn.textContent = "Remove Access";
+    btn.disabled = false; btn.textContent = "Remove Access";
     pendingRevokeEmail = null;
   }
-};
+});
 
-window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location = "continue.html"; return; }
+    document.getElementById("userHeaderEmail").textContent = user.email;
+    setupRealtimeList(user.uid);
+  });
+});
+
+function setupRealtimeList(uid) {
+  onSnapshot(doc(db, "users", uid), (snap) => {
+    const listDiv = document.getElementById("caregiverList");
+    const caregivers = snap.data()?.caregivers || [];
+    if (caregivers.length === 0) {
+      listDiv.innerHTML = `<div style="text-align:center;padding:20px;color:#bbb;font-size:14px;">No caregivers added.</div>`;
+      return;
+    }
+    listDiv.innerHTML = caregivers.map(email => `
+      <div class="caregiver-row">
+        <div class="caregiver-info">
+          <div class="caregiver-avatar">${email[0].toUpperCase()}</div>
+          <div class="caregiver-email">${email}</div>
+        </div>
+        <button class="revoke-btn" data-email="${email}">Revoke</button>
+      </div>
+    `).join('');
+
+    listDiv.querySelectorAll('.revoke-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pendingRevokeEmail = btn.dataset.email;
+        document.getElementById("revokeEmailDisplay").textContent = pendingRevokeEmail;
+        openModal("revokeModal");
+      });
+    });
+  });
+}
 </script>
 </body>
 </html>
