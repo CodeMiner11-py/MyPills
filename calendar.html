@@ -3,6 +3,11 @@
 <head>
 <title>Calendar – MyPills</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c0392b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
 body{background:#f7f7f5;min-height:100vh;}
@@ -55,9 +60,7 @@ header{
   margin-bottom:20px;
 }
 .cal-month{font-size:1.1rem;font-weight:700;color:#1a1a1a;}
-.cal-nav{
-  display:flex;gap:8px;
-}
+.cal-nav{display:flex;gap:8px;}
 .cal-nav button{
   background:none;border:1.5px solid #e0e0e0;
   border-radius:8px;width:32px;height:32px;
@@ -89,18 +92,10 @@ header{
 .cal-day:hover{background:#fef0ef;}
 .cal-day.empty{cursor:default;}
 .cal-day.empty:hover{background:none;}
-.cal-day.today{
-  background:#c0392b;color:#fff;font-weight:700;
-}
+.cal-day.today{background:#c0392b;color:#fff;font-weight:700;}
 .cal-day.today:hover{background:#a93226;}
-.cal-day.selected{
-  background:#fef0ef;color:#c0392b;font-weight:700;
-  outline:2px solid #c0392b;
-}
-.cal-day.today.selected{
-  background:#c0392b;color:#fff;
-  outline:2px solid #c0392b;
-}
+.cal-day.selected{background:#fef0ef;color:#c0392b;font-weight:700;outline:2px solid #c0392b;}
+.cal-day.today.selected{background:#c0392b;color:#fff;outline:2px solid #c0392b;}
 .cal-day .dot{
   position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
   width:4px;height:4px;border-radius:50%;background:#c0392b;
@@ -128,7 +123,6 @@ header{
   gap:12px;
 }
 .med-row:last-child{border-bottom:none;}
-.med-row-info{}
 .med-row-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
 .med-row-dose{font-size:12px;color:#aaa;}
 .med-row-actions{display:flex;gap:8px;flex-shrink:0;}
@@ -143,17 +137,11 @@ header{
   background:transparent;
   color:#c0392b;
 }
-.log-btn.active{
-  background:#c0392b;
-  color:#fff;
-}
+.log-btn.active{background:#c0392b;color:#fff;}
 .log-btn:hover{opacity:0.85;}
 
-.state-msg{
-  text-align:center;padding:40px 20px;color:#bbb;font-size:0.9rem;
-}
+.state-msg{text-align:center;padding:40px 20px;color:#bbb;font-size:0.9rem;}
 
-/* SECTION DIVIDER */
 .day-section-label{
   font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;
   letter-spacing:0.08em;padding:14px 0 6px;
@@ -161,53 +149,39 @@ header{
 }
 .day-section-label:first-child{border-top:none;padding-top:0;}
 
-/* APPT ROW */
 .appt-row{
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 0;
-  border-bottom:1px solid #f5f5f3;
-  gap:12px;
+  padding:14px 0;border-bottom:1px solid #f5f5f3;gap:12px;
 }
 .appt-row:last-child{border-bottom:none;}
-.appt-row-info{}
 .appt-row-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
 .appt-row-meta{font-size:12px;color:#aaa;}
 .appt-row-actions{display:flex;gap:8px;flex-shrink:0;}
 
 .appt-btn{
-  padding:7px 14px;
-  border-radius:8px;
-  font-size:12px;font-weight:600;
-  cursor:pointer;transition:all .2s;
-  border:1.5px solid #c0392b;
-  background:transparent;color:#c0392b;
-  text-decoration:none;display:inline-flex;align-items:center;
+  padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;border:1.5px solid #c0392b;
+  background:transparent;color:#c0392b;text-decoration:none;
+  display:inline-flex;align-items:center;
 }
 .appt-btn.complete.done{background:#c0392b;color:#fff;}
 .appt-btn:hover{opacity:0.8;}
 .appt-btn.view-link{border-color:#bbb;color:#888;}
 .appt-btn.view-link:hover{border-color:#c0392b;color:#c0392b;}
 
-/* appt dot — blue so it's distinct from med dot */
 .cal-day .appt-dot{
   position:absolute;bottom:3px;right:6px;
   width:4px;height:4px;border-radius:50%;background:#2980b9;
 }
 .cal-day.today .appt-dot{background:#fff;opacity:0.8;}
 
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(24px);}
-  to{opacity:1;transform:translateY(0);}
-}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 </style>
-<link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
 
 <header>
-  <a class="logo" href="index.html">
-    <img src="pill.png"> MyPills
-  </a>
+  <a class="logo" href="index.html"><img src="pill.png"> MyPills</a>
   <div class="header-right">
     <span class="header-user" id="userEmail"></span>
     <button class="btn-logout" onclick="logout()">Log Out</button>
@@ -215,7 +189,7 @@ header{
 </header>
 
 <div class="page">
-  <a class="back-link" href="app.html">← Back to dashboard</a>
+  <a class="back-link" onclick="history.back()" style="cursor:pointer;">← Back to previous page</a>
   <h1>My <span>Calendar</span></h1>
 
   <div class="cal-card">
@@ -238,44 +212,79 @@ header{
   </div>
 </div>
 
+<!-- canvas-confetti from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
   authDomain: "mypills-f768a.firebaseapp.com",
   projectId: "mypills-f768a",
   storageBucket: "mypills-f768a.appspot.com",
-  messagingSenderId: "150822030449",
+  messagingSenderId: "150822030429",
   appId: "1:150822030429:web:6805cc679e0a35f3d9d1b4",
   measurementId: "G-4CSFQDQG8S"
 };
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db   = getFirestore(app);
 
-let currentUser = null;
-let allMeds = [];
-let allAppts = [];
+let currentUser  = null;
+let allMeds      = [];
+let allAppts     = [];
 let selectedDate = new Date();
-let calYear = selectedDate.getFullYear();
-let calMonth = selectedDate.getMonth();
+let calYear      = selectedDate.getFullYear();
+let calMonth     = selectedDate.getMonth();
 
+// ── Confetti helpers ──────────────────────────────────────────────
+function fireConfetti(btn) {
+  // Get button position so confetti bursts from the button itself
+  const rect = btn.getBoundingClientRect();
+  const x = (rect.left + rect.width / 2) / window.innerWidth;
+  const y = (rect.top  + rect.height / 2) / window.innerHeight;
+
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { x, y },
+    colors: ["#c0392b", "#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#fff"],
+    startVelocity: 28,
+    gravity: 1.1,
+    scalar: 0.9,
+    ticks: 180,
+  });
+
+  // Vibrate on mobile — one-liner, ignored if unsupported
+  if (navigator.vibrate) navigator.vibrate(50);
+}
+
+function fireAllDoneConfetti() {
+  // Big burst for "all doses logged" moment
+  confetti({ particleCount: 180, spread: 100, origin: { x: 0.5, y: 0.55 },
+    colors: ["#c0392b","#e74c3c","#f1c40f","#2ecc71","#fff"], startVelocity: 45, ticks: 300 });
+  setTimeout(() => confetti({ particleCount: 80, angle: 60,  spread: 55, origin: { x: 0 },
+    colors: ["#c0392b","#f1c40f","#2ecc71"] }), 200);
+  setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 },
+    colors: ["#c0392b","#f1c40f","#2ecc71"] }), 400);
+}
+
+// ── Date helpers ──────────────────────────────────────────────────
 function dateKey(d) {
   return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
 }
-
 function sameDay(a, b) {
   return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
 }
-
 function fmtSelected(d) {
-  return d.toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric", year:"numeric"});
+  return d.toLocaleDateString("en-US", {weekday:"long",month:"long",day:"numeric",year:"numeric"});
 }
 
+// ── Auth ──────────────────────────────────────────────────────────
 setPersistence(auth, browserLocalPersistence).then(() => {
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location = "continue.html"; return; }
@@ -292,48 +301,39 @@ async function loadMeds() {
   const snap = await getDocs(collection(db, "users", currentUser.uid, "medications"));
   allMeds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
-
 async function loadAppts() {
   const snap = await getDocs(collection(db, "users", currentUser.uid, "appts"));
-  allAppts = snap.docs
-    .filter(d => d.data().title)
-    .map(d => ({ id: d.id, ...d.data() }));
+  allAppts = snap.docs.filter(d => d.data().title).map(d => ({ id: d.id, ...d.data() }));
 }
 
 async function getLogsForDay(medId, date, dose) {
   const key = dateKey(date);
-  const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
-  const q = dose != null
-    ? query(logsRef, where("day", "==", key), where("dose", "==", dose))
-    : query(logsRef, where("day", "==", key));
+  const ref = collection(db, "users", currentUser.uid, "medications", medId, "logs");
+  const q   = dose != null
+    ? query(ref, where("day","==",key), where("dose","==",dose))
+    : query(ref, where("day","==",key));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ logId: d.id, ...d.data() }));
 }
 
 async function setLog(medId, date, status, dose) {
-  const key = dateKey(date);
-  const logsRef = collection(db, "users", currentUser.uid, "medications", medId, "logs");
-  const existing = await getDocs(query(logsRef, where("day", "==", key), where("dose", "==", dose)));
-  for (const d of existing.docs) {
+  const key  = dateKey(date);
+  const ref  = collection(db, "users", currentUser.uid, "medications", medId, "logs");
+  const existing = await getDocs(query(ref, where("day","==",key), where("dose","==",dose)));
+  for (const d of existing.docs)
     await deleteDoc(doc(db, "users", currentUser.uid, "medications", medId, "logs", d.id));
-  }
-  if (status === null) return;
-  await addDoc(logsRef, {
-    medicationId: medId,
-    status: status,
-    day: key,
-    dose: dose
-  });
+  if (status !== null)
+    await addDoc(ref, { medicationId: medId, status, day: key, dose });
 }
 
+// ── Calendar render ───────────────────────────────────────────────
 function renderCalendar() {
-  const today = new Date();
+  const today  = new Date();
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   document.getElementById("calMonth").textContent = `${months[calMonth]} ${calYear}`;
 
   const grid = document.getElementById("calGrid");
   grid.innerHTML = "";
-
   ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(l => {
     const el = document.createElement("div");
     el.className = "cal-day-label";
@@ -341,8 +341,8 @@ function renderCalendar() {
     grid.appendChild(el);
   });
 
-  const firstDay = new Date(calYear, calMonth, 1).getDay();
-  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const firstDay     = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
     const el = document.createElement("div");
@@ -352,52 +352,37 @@ function renderCalendar() {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(calYear, calMonth, d);
-    const el = document.createElement("div");
+    const el   = document.createElement("div");
     el.className = "cal-day";
-    if (sameDay(date, today)) el.classList.add("today");
+    if (sameDay(date, today))        el.classList.add("today");
     if (sameDay(date, selectedDate)) el.classList.add("selected");
     el.textContent = d;
 
-    // Med dot
     const hasMed = allMeds.some(med => {
       const toD = v => v ? (v.toDate ? v.toDate() : new Date(v)) : null;
-      const stripTime = x => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+      const strip = x => new Date(x.getFullYear(), x.getMonth(), x.getDate());
       const start = toD(med.startDate), stop = toD(med.stopDate), expiry = toD(med.expiryDate);
       const end = (stop && expiry) ? (stop < expiry ? stop : expiry) : (stop || expiry || null);
-      const sel = stripTime(date);
-      if (start && sel < stripTime(start)) return false;
-      if (end   && sel > stripTime(end))   return false;
+      const sel = strip(date);
+      if (start && sel < strip(start)) return false;
+      if (end   && sel > strip(end))   return false;
       return true;
     });
-    if (hasMed) {
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      el.appendChild(dot);
-    }
+    if (hasMed) { const dot = document.createElement("span"); dot.className = "dot"; el.appendChild(dot); }
 
-    // Appt dot
     const hasAppt = allAppts.some(appt => {
       const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
       if (!dt) return false;
-      return dt.getFullYear() === date.getFullYear() && dt.getMonth() === date.getMonth() && dt.getDate() === date.getDate();
+      return dt.getFullYear()===date.getFullYear() && dt.getMonth()===date.getMonth() && dt.getDate()===date.getDate();
     });
-    if (hasAppt) {
-      const adot = document.createElement("span");
-      adot.className = "appt-dot";
-      el.appendChild(adot);
-    }
+    if (hasAppt) { const adot = document.createElement("span"); adot.className = "appt-dot"; el.appendChild(adot); }
 
     el.onclick = () => selectDay(date);
     grid.appendChild(el);
   }
 }
 
-function selectDay(date) {
-  selectedDate = date;
-  renderCalendar();
-  renderDayBox();
-}
-
+function selectDay(date) { selectedDate = date; renderCalendar(); renderDayBox(); }
 function changeMonth(dir) {
   calMonth += dir;
   if (calMonth > 11) { calMonth = 0; calYear++; }
@@ -405,19 +390,15 @@ function changeMonth(dir) {
   renderCalendar();
 }
 
+// ── Day box render ────────────────────────────────────────────────
 async function renderDayBox() {
   document.getElementById("dayBoxDate").textContent = fmtSelected(selectedDate);
   const content = document.getElementById("dayBoxContent");
   content.innerHTML = `<div class="state-msg">Loading...</div>`;
 
-  if (allMeds.length === 0) {
-    content.innerHTML = `<div class="state-msg">No medications added yet.</div>`;
-    return;
-  }
-
-  const toD = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
-  const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const WEEK_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const toD   = v => !v ? null : (v.toDate ? v.toDate() : new Date(v));
+  const strip = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const WEEK_DAYS   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
   function fmtTime(t) {
@@ -428,56 +409,49 @@ async function renderDayBox() {
     h = h % 12 || 12;
     return `${h}:${String(m).padStart(2,"0")} ${ampm}`;
   }
-
-  function doseAppliesToDay(doseEntry, unit) {
-    if (!doseEntry) return true;
+  function doseApplies(entry, unit) {
+    if (!entry) return true;
     const sel = selectedDate;
-    if (unit === "WEEKLY")  return doseEntry.day === WEEK_DAYS[sel.getDay()];
-    if (unit === "MONTHLY") return sel.getDate() === parseInt(doseEntry.day);
-    if (unit === "YEARLY")  return sel.getMonth()+1 === parseInt(doseEntry.month) && sel.getDate() === parseInt(doseEntry.day);
+    if (unit==="WEEKLY")  return entry.day === WEEK_DAYS[sel.getDay()];
+    if (unit==="MONTHLY") return sel.getDate() === parseInt(entry.day);
+    if (unit==="YEARLY")  return sel.getMonth()+1===parseInt(entry.month) && sel.getDate()===parseInt(entry.day);
     return true;
   }
-
-  function doseTimeLabel(doseEntry, unit) {
-    if (!doseEntry) return "";
-    if (unit === "HOURLY")  return `:${String(doseEntry.time).padStart(2,"0")} past each hour`;
-    if (unit === "DAILY")   return fmtTime(doseEntry.time);
-    if (unit === "WEEKLY")  return `${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
-    if (unit === "MONTHLY") return `Day ${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
-    if (unit === "YEARLY")  return `${MONTH_NAMES[parseInt(doseEntry.month)-1]} ${doseEntry.day} at ${fmtTime(doseEntry.time)}`;
+  function doseTimeLabel(entry, unit) {
+    if (!entry) return "";
+    if (unit==="HOURLY")  return `:${String(entry.time).padStart(2,"0")} past each hour`;
+    if (unit==="DAILY")   return fmtTime(entry.time);
+    if (unit==="WEEKLY")  return `${entry.day} at ${fmtTime(entry.time)}`;
+    if (unit==="MONTHLY") return `Day ${entry.day} at ${fmtTime(entry.time)}`;
+    if (unit==="YEARLY")  return `${MONTH_NAMES[parseInt(entry.month)-1]} ${entry.day} at ${fmtTime(entry.time)}`;
     return "";
   }
 
   const dateMeds = allMeds.filter(med => {
-    const start  = toD(med.startDate);
-    const stop   = toD(med.stopDate);
-    const expiry = toD(med.expiryDate);
+    const start  = toD(med.startDate), stop = toD(med.stopDate), expiry = toD(med.expiryDate);
     const end    = (stop && expiry) ? (stop < expiry ? stop : expiry) : (stop || expiry || null);
-    const sel    = stripTime(selectedDate);
-    if (start && sel < stripTime(start)) return false;
-    if (end   && sel > stripTime(end))   return false;
+    const sel    = strip(selectedDate);
+    if (start && sel < strip(start)) return false;
+    if (end   && sel > strip(end))   return false;
     return true;
   });
 
   const doseRows = [];
   for (const med of dateMeds) {
-    const totalDoses = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
-    const unit = Array.isArray(med.schedule) ? med.schedule[1] : "DAILY";
+    const total = Array.isArray(med.schedule) ? (parseInt(med.schedule[0]) || 1) : 1;
+    const unit  = Array.isArray(med.schedule) ? med.schedule[1] : "DAILY";
     const times = med.times || [];
-    for (let d = 1; d <= totalDoses; d++) {
-      const doseEntry = times[d-1] || null;
-      if (!doseAppliesToDay(doseEntry, unit)) continue;
-      doseRows.push({ med, dose: d, totalDoses, doseEntry, unit });
+    for (let d = 1; d <= total; d++) {
+      const entry = times[d-1] || null;
+      if (!doseApplies(entry, unit)) continue;
+      doseRows.push({ med, dose: d, total, entry, unit });
     }
   }
 
-  // Appointments for selected day
   const dayAppts = allAppts.filter(appt => {
     const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
     if (!dt) return false;
-    return dt.getFullYear() === selectedDate.getFullYear() &&
-           dt.getMonth()    === selectedDate.getMonth() &&
-           dt.getDate()     === selectedDate.getDate();
+    return dt.getFullYear()===selectedDate.getFullYear() && dt.getMonth()===selectedDate.getMonth() && dt.getDate()===selectedDate.getDate();
   });
 
   if (doseRows.length === 0 && dayAppts.length === 0) {
@@ -485,38 +459,36 @@ async function renderDayBox() {
     return;
   }
 
+  // Pre-fetch all log states
   const logMap = {};
   for (const { med, dose } of doseRows) {
     const logs = await getLogsForDay(med.id, selectedDate, dose);
     logMap[`${med.id}_${dose}`] = logs.length > 0 ? logs[0].status : null;
   }
 
-  // Appt completion map
   const apptDoneMap = {};
   for (const appt of dayAppts) {
     const snap = await getDocs(query(
       collection(db, "users", currentUser.uid, "apptLogs"),
-      where("apptId", "==", appt.id),
-      where("day", "==", dateKey(selectedDate))
+      where("apptId","==",appt.id), where("day","==",dateKey(selectedDate))
     ));
     apptDoneMap[appt.id] = !snap.empty;
   }
 
   content.innerHTML = "";
 
-  // ── Medications section ──
+  // Medications
   if (doseRows.length > 0) {
-    const medLabel = document.createElement("div");
-    medLabel.className = "day-section-label";
-    medLabel.textContent = "Medications";
-    content.appendChild(medLabel);
+    const lbl = document.createElement("div");
+    lbl.className = "day-section-label";
+    lbl.textContent = "Medications";
+    content.appendChild(lbl);
 
-    for (const { med, dose, totalDoses, doseEntry, unit } of doseRows) {
+    for (const { med, dose, total, entry, unit } of doseRows) {
       const status    = logMap[`${med.id}_${dose}`];
       const dosage    = Array.isArray(med.dosage) ? `${med.dosage[0]} ${med.dosage[1]}` : med.dosage || "";
-      const doseLabel = totalDoses > 1 ? ` · Dose ${dose} of ${totalDoses}` : "";
-      const timeLabel = doseTimeLabel(doseEntry, unit);
-      const rowId     = `${med.id}_${dose}`;
+      const doseLabel = total > 1 ? ` · Dose ${dose} of ${total}` : "";
+      const timeLabel = doseTimeLabel(entry, unit);
 
       const row = document.createElement("div");
       row.className = "med-row";
@@ -526,28 +498,28 @@ async function renderDayBox() {
           <div class="med-row-dose">${dosage}${timeLabel ? ' · ' + timeLabel : ''}</div>
         </div>
         <div class="med-row-actions">
-          <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${rowId}" onclick="logAction('${med.id}', 'TAKEN', ${dose})">Take</button>
-          <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${rowId}" onclick="logAction('${med.id}', 'SKIPPED', ${dose})">Skip</button>
-        </div>
-      `;
+          <button class="log-btn ${status==='TAKEN' ? 'active' : ''}" id="take-${med.id}_${dose}"
+            onclick="logAction('${med.id}','TAKEN',${dose},this)">Take</button>
+          <button class="log-btn ${status==='SKIPPED' ? 'active' : ''}" id="skip-${med.id}_${dose}"
+            onclick="logAction('${med.id}','SKIPPED',${dose},this)">Skip</button>
+        </div>`;
       content.appendChild(row);
     }
   }
 
-  // ── Appointments section ──
+  // Appointments
   if (dayAppts.length > 0) {
-    const apptLabel = document.createElement("div");
-    apptLabel.className = "day-section-label";
-    apptLabel.textContent = "Appointments";
-    content.appendChild(apptLabel);
+    const lbl = document.createElement("div");
+    lbl.className = "day-section-label";
+    lbl.textContent = "Appointments";
+    content.appendChild(lbl);
 
     for (const appt of dayAppts) {
-      const done = apptDoneMap[appt.id];
-      const dt = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
-      const timeStr = dt ? dt.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }) : "";
-      const meta = [appt.doctor, appt.provider, timeStr].filter(Boolean).join(" · ");
-
-      const row = document.createElement("div");
+      const done   = apptDoneMap[appt.id];
+      const dt     = appt.datetime ? (appt.datetime.toDate ? appt.datetime.toDate() : new Date(appt.datetime)) : null;
+      const timeStr = dt ? dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}) : "";
+      const meta   = [appt.doctor, appt.provider, timeStr].filter(Boolean).join(" · ");
+      const row    = document.createElement("div");
       row.className = "appt-row";
       row.innerHTML = `
         <div class="appt-row-info">
@@ -555,65 +527,82 @@ async function renderDayBox() {
           <div class="appt-row-meta">${meta}</div>
         </div>
         <div class="appt-row-actions">
-          <button class="appt-btn complete ${done ? 'done' : ''}" id="complete-${appt.id}" onclick="toggleApptComplete('${appt.id}')">${done ? '✓ Done' : 'Complete'}</button>
+          <button class="appt-btn complete ${done?'done':''}" id="complete-${appt.id}"
+            onclick="toggleApptComplete('${appt.id}')">${done ? '✓ Done' : 'Complete'}</button>
           <a class="appt-btn view-link" href="appointments.html">View</a>
-        </div>
-      `;
+        </div>`;
       content.appendChild(row);
     }
   }
 }
 
-async function logAction(medId, status, dose) {
+// ── Log action — CONFETTI on TAKEN ────────────────────────────────
+async function logAction(medId, status, dose, btn) {
   const rowId   = `${medId}_${dose}`;
   const takeBtn = document.getElementById(`take-${rowId}`);
   const skipBtn = document.getElementById(`skip-${rowId}`);
 
-  const currentlyActive = (status === 'TAKEN' && takeBtn.classList.contains('active')) ||
-                           (status === 'SKIPPED' && skipBtn.classList.contains('active'));
+  const wasActive = btn.classList.contains('active');
 
   takeBtn.classList.remove('active');
   skipBtn.classList.remove('active');
 
-  if (!currentlyActive) {
-    if (status === 'TAKEN') takeBtn.classList.add('active');
-    else skipBtn.classList.add('active');
+  if (!wasActive) {
+    btn.classList.add('active');
     await setLog(medId, selectedDate, status, dose);
+
+    // 🎉 Confetti on Take
+    if (status === 'TAKEN') {
+      fireConfetti(btn);
+
+      // Check if ALL doses for today are now taken/skipped → big celebration
+      await checkAllDone();
+    }
   } else {
     await setLog(medId, selectedDate, null, dose);
   }
 }
 
-async function toggleApptComplete(apptId) {
-  const btn = document.getElementById(`complete-${apptId}`);
-  const day = dateKey(selectedDate);
-  const logsRef = collection(db, "users", currentUser.uid, "apptLogs");
-  const existing = await getDocs(query(logsRef, where("apptId", "==", apptId), where("day", "==", day)));
-
-  if (!existing.empty) {
-    // Undo completion
-    for (const d of existing.docs) {
-      await deleteDoc(doc(db, "users", currentUser.uid, "apptLogs", d.id));
-    }
-    btn.textContent = "Complete";
-    btn.classList.remove("done");
-  } else {
-    // Mark complete
-    await addDoc(logsRef, { apptId, day, completedAt: new Date().toISOString() });
-    btn.textContent = "✓ Done";
-    btn.classList.add("done");
+async function checkAllDone() {
+  // Count how many Take/Skip buttons are still inactive (unlocked)
+  const takeBtns = document.querySelectorAll('.log-btn');
+  const anyUnlogged = [...takeBtns].some(b => {
+    const row = b.closest('.med-row');
+    if (!row) return false;
+    const take = row.querySelector('[id^="take-"]');
+    const skip = row.querySelector('[id^="skip-"]');
+    return !take.classList.contains('active') && !skip.classList.contains('active');
+  });
+  if (!anyUnlogged) {
+    setTimeout(fireAllDoneConfetti, 300);
   }
 }
 
-async function logout() {
-  await signOut(auth);
-  window.location = "index.html";
+async function toggleApptComplete(apptId) {
+  const btn     = document.getElementById(`complete-${apptId}`);
+  const day     = dateKey(selectedDate);
+  const ref     = collection(db, "users", currentUser.uid, "apptLogs");
+  const existing = await getDocs(query(ref, where("apptId","==",apptId), where("day","==",day)));
+
+  if (!existing.empty) {
+    for (const d of existing.docs)
+      await deleteDoc(doc(db, "users", currentUser.uid, "apptLogs", d.id));
+    btn.textContent = "Complete";
+    btn.classList.remove("done");
+  } else {
+    await addDoc(ref, { apptId, day, completedAt: new Date().toISOString() });
+    btn.textContent = "✓ Done";
+    btn.classList.add("done");
+    fireConfetti(btn);
+  }
 }
 
-window.logAction = logAction;
+async function logout() { await signOut(auth); window.location = "index.html"; }
+
+window.logAction          = logAction;
 window.toggleApptComplete = toggleApptComplete;
-window.logout = logout;
-window.changeMonth = changeMonth;
+window.logout             = logout;
+window.changeMonth        = changeMonth;
 </script>
 </body>
 </html>
