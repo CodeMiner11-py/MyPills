@@ -143,13 +143,11 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.classList.remove("show"), 3000);
 }
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    document.getElementById("userHeaderEmail").textContent = user.email;
-    setupRealtimeList(user.uid);
-  } else {
-    window.location.href = "continue.html";
-  }
+setPersistence(auth, browserLocalPersistence).then(() => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location = "continue.html"; return; }
+    loadPatients(user.email);
+  });
 });
 
 function setupRealtimeList(uid) {
