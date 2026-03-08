@@ -1,70 +1,440 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" type="image/png" href="logo.png">
-    <title>Scan Medication – MyPills</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <!-- Correct ZXing Browser CDN -->
-    <script src="https://unpkg.com/@zxing/browser@1.2.0"></script>
-    <style>
-        *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
-        body{background:#f7f7f5;min-height:100vh;padding:48px 20px;}
+  <link rel="icon" type="image/png" href="logo.png">
+  <title>Scan Barcode – MyPills</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <style>
+    *{font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;box-sizing:border-box;}
+    body{background:#f7f7f5;min-height:100vh;}
 
-        /* HEADER */
-        header{
-          display:flex;align-items:center;justify-content:space-between;
-          padding:18px 40px;
-          background:rgba(255,255,255,0.75);
-          backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-          border-bottom:1px solid rgba(0,0,0,0.08);
-          position:sticky;top:0;z-index:100;
-        }
-        .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;color:#1a1a1a;text-decoration:none;}
-        .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
-        .header-right{display:flex;align-items:center;gap:12px;}
-        .header-user{font-size:13px;color:#888;}
-        .btn-logout{background:transparent;color:#c0392b;border:1.5px solid #c0392b;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
-        .btn-logout:hover{background:#c0392b;color:#fff;}
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:18px 40px;
+      background:rgba(255,255,255,0.75);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(0,0,0,0.08);
+      position:sticky;top:0;z-index:100;
+    }
+    .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;color:#1a1a1a;text-decoration:none;}
+    .logo img{height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.2));}
+    .header-right{display:flex;align-items:center;gap:12px;}
+    .header-user{font-size:13px;color:#888;}
+    .btn-back{
+      background:transparent;color:#c0392b;border:1.5px solid #c0392b;
+      border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;
+      cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn-back:hover{background:#c0392b;color:#fff;}
 
-        /* PAGE */
-        .page{margin-top:32px;}
-        #scanner{width:100%;max-width:480px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);}
-        #results{margin-top:24px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.06);}
-        .label{font-weight:700;color:#c0392b;margin-top:10px;}
-        .value{margin-bottom:8px;color:#1a1a1a;}
-        .info-row{margin-bottom:6px;}
-        button.scan-btn{background:#c0392b;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;margin-top:16px;margin-right:10px;}
-        button.scan-btn:hover{background:#a93226;}
-        input#uploadImage{margin-top:16px;}
-    </style>
+    .page{max-width:700px;margin:0 auto;padding:48px 20px;animation:fadeUp .45s ease both;}
+
+    .page-title{font-size:1.7rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.03em;margin-bottom:6px;}
+    .page-sub{font-size:14px;color:#999;margin-bottom:36px;}
+
+    /* TABS */
+    .tabs{display:flex;gap:8px;margin-bottom:28px;background:#fff;border-radius:14px;padding:6px;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+    .tab-btn{
+      flex:1;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:600;
+      cursor:pointer;transition:all .2s;background:transparent;color:#aaa;
+      display:flex;align-items:center;justify-content:center;gap:7px;
+    }
+    .tab-btn .material-symbols-outlined{font-size:18px;}
+    .tab-btn.active{background:#c0392b;color:#fff;box-shadow:0 4px 12px rgba(192,57,43,0.3);}
+    .tab-btn:not(.active):hover{background:#f5f5f5;color:#555;}
+
+    /* PANELS */
+    .panel{display:none;}
+    .panel.active{display:block;animation:fadeUp .3s ease both;}
+
+    /* CAMERA PANEL */
+    .scanner-wrap{
+      background:#fff;border-radius:20px;overflow:hidden;
+      box-shadow:0 4px 24px rgba(0,0,0,0.08);
+      margin-bottom:20px;position:relative;
+    }
+    .scanner-inner{
+      position:relative;width:100%;aspect-ratio:4/3;background:#111;
+      overflow:hidden;display:flex;align-items:center;justify-content:center;
+    }
+    #camera-view{width:100%;height:100%;object-fit:cover;display:block;}
+    #quagga-viewport{position:absolute;top:0;left:0;width:100%;height:100%;}
+    #quagga-viewport canvas{width:100%!important;height:100%!important;}
+
+    .scanner-overlay{
+      position:absolute;top:0;left:0;right:0;bottom:0;
+      display:flex;align-items:center;justify-content:center;
+      pointer-events:none;
+    }
+    .scan-frame{
+      width:70%;max-width:320px;height:120px;
+      border:2.5px solid rgba(192,57,43,0.8);
+      border-radius:16px;
+      box-shadow:0 0 0 4000px rgba(0,0,0,0.45);
+      position:relative;
+    }
+    .scan-line{
+      position:absolute;left:8px;right:8px;height:2px;
+      background:linear-gradient(90deg,transparent,#c0392b,transparent);
+      animation:scanMove 2s ease-in-out infinite;top:0;
+    }
+    @keyframes scanMove{0%,100%{top:10px;opacity:0;}10%{opacity:1;}90%{opacity:1;}50%{top:calc(100% - 12px);}}
+
+    .corner{position:absolute;width:18px;height:18px;border-color:#c0392b;border-style:solid;}
+    .corner.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+    .corner.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+    .corner.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+    .corner.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+
+    .scanner-idle{
+      position:absolute;top:0;left:0;right:0;bottom:0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+      background:#1a1a1a;
+    }
+    .scanner-idle .material-symbols-outlined{font-size:52px;color:#444;}
+    .scanner-idle p{font-size:14px;color:#666;text-align:center;max-width:200px;line-height:1.5;}
+
+    .scanner-status{
+      padding:14px 20px;display:flex;align-items:center;gap:10px;
+      border-top:1px solid #f0f0f0;
+    }
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;transition:all .3s;}
+    .status-dot.active{background:#27ae60;box-shadow:0 0 0 3px rgba(39,174,96,0.2);}
+    .status-dot.scanning{background:#c0392b;animation:pulse 1s ease infinite;}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,0.4);}50%{box-shadow:0 0 0 6px rgba(192,57,43,0);}}
+    .status-text{font-size:13px;color:#888;}
+
+    .cam-btn{
+      width:100%;padding:14px;border:none;border-radius:12px;
+      background:#c0392b;color:#fff;font-size:14px;font-weight:700;
+      cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .cam-btn:hover{background:#a93226;transform:translateY(-1px);}
+    .cam-btn:disabled{background:#ddd;color:#999;transform:none;cursor:not-allowed;}
+    .cam-btn .material-symbols-outlined{font-size:18px;}
+    .cam-btn.secondary{background:#fff;color:#c0392b;border:1.5px solid #c0392b;margin-top:10px;}
+    .cam-btn.secondary:hover{background:#fff0ef;}
+
+    /* UPLOAD PANEL */
+    .upload-zone{
+      border:2px dashed #e0e0e0;border-radius:20px;
+      padding:56px 32px;text-align:center;
+      background:#fff;cursor:pointer;transition:all .25s;
+      position:relative;overflow:hidden;
+    }
+    .upload-zone:hover,.upload-zone.drag-over{border-color:#c0392b;background:#fff8f7;}
+    .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .upload-icon{
+      width:64px;height:64px;border-radius:18px;
+      background:#fff0ef;display:flex;align-items:center;justify-content:center;
+      margin:0 auto 16px;
+    }
+    .upload-icon .material-symbols-outlined{font-size:32px;color:#c0392b;}
+    .upload-title{font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:6px;}
+    .upload-sub{font-size:13px;color:#aaa;line-height:1.6;}
+    .upload-sub span{color:#c0392b;font-weight:600;}
+
+    .preview-wrap{
+      background:#fff;border-radius:20px;overflow:hidden;
+      box-shadow:0 4px 24px rgba(0,0,0,0.08);margin-bottom:20px;display:none;
+    }
+    .preview-img-wrap{position:relative;width:100%;max-height:320px;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center;}
+    #preview-img{max-width:100%;max-height:320px;display:block;}
+    .preview-info{padding:16px 20px;border-top:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;}
+    .preview-name{font-size:13px;font-weight:600;color:#1a1a1a;}
+    .preview-clear{background:none;border:none;color:#c0392b;font-size:12px;font-weight:600;cursor:pointer;}
+
+    /* MANUAL INPUT */
+    .manual-wrap{background:#fff;border-radius:20px;padding:24px;box-shadow:0 4px 24px rgba(0,0,0,0.06);margin-bottom:20px;}
+    .input-group{margin-bottom:18px;}
+    .input-group label{display:block;font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+    .input-row{display:flex;gap:10px;}
+    .input-field{
+      flex:1;padding:13px 16px;border:1.5px solid #e8e8e8;border-radius:12px;
+      font-size:14px;color:#1a1a1a;background:#fafafa;
+      transition:all .2s;outline:none;font-family:inherit;
+    }
+    .input-field:focus{border-color:#c0392b;background:#fff;box-shadow:0 0 0 3px rgba(192,57,43,0.08);}
+    .input-field::placeholder{color:#ccc;}
+    .lookup-btn{
+      padding:13px 20px;border:none;border-radius:12px;
+      background:#c0392b;color:#fff;font-size:14px;font-weight:700;
+      cursor:pointer;transition:all .2s;white-space:nowrap;
+      display:flex;align-items:center;gap:6px;
+    }
+    .lookup-btn:hover{background:#a93226;}
+    .lookup-btn:disabled{background:#ddd;color:#999;cursor:not-allowed;}
+    .lookup-btn .material-symbols-outlined{font-size:18px;}
+
+    /* RESULT CARD */
+    .result-card{
+      background:#fff;border-radius:20px;
+      box-shadow:0 4px 24px rgba(0,0,0,0.08);
+      overflow:hidden;margin-top:20px;
+      display:none;animation:fadeUp .35s ease both;
+    }
+    .result-header{
+      padding:20px 24px;
+      background:linear-gradient(135deg,#c0392b 0%,#e74c3c 100%);
+      display:flex;align-items:center;gap:14px;
+    }
+    .result-header-icon{
+      width:46px;height:46px;border-radius:12px;
+      background:rgba(255,255,255,0.2);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .result-header-icon .material-symbols-outlined{font-size:24px;color:#fff;}
+    .result-header-text{flex:1;}
+    .result-brand{font-size:17px;font-weight:700;color:#fff;line-height:1.2;}
+    .result-generic{font-size:13px;color:rgba(255,255,255,0.75);margin-top:3px;}
+
+    .result-body{padding:20px 24px;}
+    .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+    @media(max-width:480px){.result-grid{grid-template-columns:1fr;}}
+    .result-field{background:#f9f9f9;border-radius:12px;padding:14px;}
+    .result-field-label{font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+    .result-field-val{font-size:14px;font-weight:600;color:#1a1a1a;}
+    .result-field-val.missing{color:#ddd;font-style:italic;font-weight:400;}
+
+    .result-ndc{background:#fff0ef;border-radius:12px;padding:14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+    .result-ndc .material-symbols-outlined{font-size:18px;color:#c0392b;}
+    .result-ndc-label{font-size:11px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:0.06em;}
+    .result-ndc-val{font-size:13px;font-weight:600;color:#1a1a1a;margin-top:2px;}
+
+    .result-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .action-btn{
+      flex:1;min-width:140px;padding:13px 18px;border-radius:12px;font-size:14px;font-weight:700;
+      cursor:pointer;transition:all .2s;border:none;display:flex;align-items:center;justify-content:center;gap:7px;
+    }
+    .action-btn .material-symbols-outlined{font-size:18px;}
+    .action-btn.primary{background:#c0392b;color:#fff;}
+    .action-btn.primary:hover{background:#a93226;transform:translateY(-1px);}
+    .action-btn.ghost{background:#f5f5f5;color:#555;border:1.5px solid #e8e8e8;}
+    .action-btn.ghost:hover{background:#eee;}
+
+    /* LOADING */
+    .loading-state{
+      display:none;flex-direction:column;align-items:center;justify-content:center;
+      padding:48px;gap:16px;
+    }
+    .spinner{
+      width:40px;height:40px;border-radius:50%;
+      border:3px solid #f0f0f0;border-top-color:#c0392b;
+      animation:spin .7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .loading-text{font-size:14px;color:#999;}
+
+    /* ERROR / EMPTY */
+    .empty-state{
+      display:none;flex-direction:column;align-items:center;
+      padding:40px 24px;gap:12px;text-align:center;
+    }
+    .empty-icon{width:56px;height:56px;border-radius:16px;background:#fff0ef;display:flex;align-items:center;justify-content:center;}
+    .empty-icon .material-symbols-outlined{font-size:28px;color:#c0392b;}
+    .empty-title{font-size:15px;font-weight:700;color:#1a1a1a;}
+    .empty-sub{font-size:13px;color:#aaa;line-height:1.6;max-width:280px;}
+
+    /* TOAST */
+    .toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+      background:#1a1a1a;color:#fff;border-radius:12px;padding:13px 22px;
+      font-size:14px;font-weight:600;z-index:999;
+      transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s ease;
+      opacity:0;pointer-events:none;display:flex;align-items:center;gap:8px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.2);
+    }
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+    .toast .material-symbols-outlined{font-size:18px;}
+    .toast.success .material-symbols-outlined{color:#27ae60;}
+    .toast.error .material-symbols-outlined{color:#e74c3c;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+  </style>
 </head>
 <body>
 
 <header>
-  <a class="logo" href="index.html"><img src="pill.png"> MyPills</a>
+  <a class="logo" href="app.html"><img src="pill.png"> MyPills</a>
   <div class="header-right">
     <span class="header-user" id="userEmail"></span>
-    <button class="btn-logout" onclick="logout()">Log Out</button>
+    <a class="btn-back" href="app.html">
+      <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+      Dashboard
+    </a>
   </div>
 </header>
 
 <div class="page">
-    <video id="scanner" muted playsinline></video>
-    <button class="scan-btn" id="startScan">Start Camera Scan</button>
-    <input type="file" accept="image/*" id="uploadImage">
 
-    <div id="results" style="display:none;">
-        <div class="info-row"><span class="label">Brand Name:</span> <span class="value" id="brandName">-</span></div>
-        <div class="info-row"><span class="label">Generic Name:</span> <span class="value" id="genericName">-</span></div>
-        <div class="info-row"><span class="label">Dosage Form:</span> <span class="value" id="dosageForm">-</span></div>
-        <div class="info-row"><span class="label">Manufacturer:</span> <span class="value" id="manufacturer">-</span></div>
+  <div class="page-title">Scan Medication</div>
+  <div class="page-sub">Scan a barcode, upload a photo, or enter an NDC code to look up drug information.</div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('camera')" id="tab-camera">
+      <span class="material-symbols-outlined">photo_camera</span> Camera
+    </button>
+    <button class="tab-btn" onclick="switchTab('upload')" id="tab-upload">
+      <span class="material-symbols-outlined">upload_file</span> Upload Image
+    </button>
+    <button class="tab-btn" onclick="switchTab('manual')" id="tab-manual">
+      <span class="material-symbols-outlined">barcode_reader</span> Enter NDC
+    </button>
+  </div>
+
+  <!-- ── CAMERA PANEL ── -->
+  <div class="panel active" id="panel-camera">
+    <div class="scanner-wrap">
+      <div class="scanner-inner">
+        <div class="scanner-idle" id="cam-idle">
+          <span class="material-symbols-outlined">barcode_reader</span>
+          <p>Click "Start Camera" to begin scanning</p>
+        </div>
+        <div id="quagga-viewport" style="display:none;"></div>
+        <div class="scanner-overlay" id="scan-overlay" style="display:none;">
+          <div class="scan-frame">
+            <div class="scan-line"></div>
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scanner-status">
+        <div class="status-dot" id="cam-dot"></div>
+        <span class="status-text" id="cam-status-text">Camera inactive</span>
+      </div>
     </div>
+    <button class="cam-btn" id="cam-toggle-btn" onclick="toggleCamera()">
+      <span class="material-symbols-outlined">photo_camera</span> Start Camera
+    </button>
+    <button class="cam-btn secondary" id="cam-manual-trigger" onclick="switchTab('manual')" style="display:none;">
+      <span class="material-symbols-outlined">keyboard</span> Enter NDC Manually Instead
+    </button>
+  </div>
+
+  <!-- ── UPLOAD PANEL ── -->
+  <div class="panel" id="panel-upload">
+    <div class="preview-wrap" id="preview-wrap">
+      <div class="preview-img-wrap">
+        <img id="preview-img" src="" alt="Preview">
+      </div>
+      <div class="preview-info">
+        <span class="preview-name" id="preview-name"></span>
+        <button class="preview-clear" onclick="clearUpload()">✕ Clear</button>
+      </div>
+    </div>
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" accept="image/*" id="file-input" onchange="handleFileSelect(this)">
+      <div class="upload-icon"><span class="material-symbols-outlined">image_search</span></div>
+      <div class="upload-title">Drop a barcode image here</div>
+      <div class="upload-sub">or <span>click to browse</span><br>JPEG, PNG, WEBP supported</div>
+    </div>
+    <button class="cam-btn" style="margin-top:14px;" id="scan-upload-btn" onclick="scanUploadedImage()" disabled>
+      <span class="material-symbols-outlined">document_scanner</span> Scan Image for Barcode
+    </button>
+  </div>
+
+  <!-- ── MANUAL PANEL ── -->
+  <div class="panel" id="panel-manual">
+    <div class="manual-wrap">
+      <div class="input-group">
+        <label>NDC / Barcode Number</label>
+        <div class="input-row">
+          <input class="input-field" id="ndc-input" type="text" placeholder="e.g. 0071-0155-23 or 00710155230" maxlength="20"
+            onkeydown="if(event.key==='Enter')lookupNDC()">
+          <button class="lookup-btn" id="lookup-btn" onclick="lookupNDC()">
+            <span class="material-symbols-outlined">search</span> Look Up
+          </button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#bbb;line-height:1.6;">
+        Enter the 10 or 11-digit National Drug Code (NDC) found on the medication label.
+        Hyphens are optional — both <em>0071-0155-23</em> and <em>00710155230</em> are accepted.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── SHARED RESULT AREA ── -->
+  <div id="loading-wrap" class="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-text">Looking up medication…</div>
+  </div>
+
+  <div id="error-wrap" class="empty-state">
+    <div class="empty-icon"><span class="material-symbols-outlined">search_off</span></div>
+    <div class="empty-title" id="error-title">No results found</div>
+    <div class="empty-sub" id="error-sub">No medication matched that NDC code. Double-check the number and try again.</div>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-header">
+      <div class="result-header-icon"><span class="material-symbols-outlined">medication</span></div>
+      <div class="result-header-text">
+        <div class="result-brand" id="res-brand">—</div>
+        <div class="result-generic" id="res-generic">—</div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div class="result-ndc">
+        <span class="material-symbols-outlined">barcode</span>
+        <div>
+          <div class="result-ndc-label">NDC Code</div>
+          <div class="result-ndc-val" id="res-ndc">—</div>
+        </div>
+      </div>
+      <div class="result-grid">
+        <div class="result-field">
+          <div class="result-field-label">Dosage Form</div>
+          <div class="result-field-val" id="res-form">—</div>
+        </div>
+        <div class="result-field">
+          <div class="result-field-label">Route</div>
+          <div class="result-field-val" id="res-route">—</div>
+        </div>
+        <div class="result-field">
+          <div class="result-field-label">Manufacturer</div>
+          <div class="result-field-val" id="res-mfr">—</div>
+        </div>
+        <div class="result-field">
+          <div class="result-field-label">Strength</div>
+          <div class="result-field-val" id="res-strength">—</div>
+        </div>
+        <div class="result-field">
+          <div class="result-field-label">Product Type</div>
+          <div class="result-field-val" id="res-type">—</div>
+        </div>
+        <div class="result-field">
+          <div class="result-field-label">Packaging</div>
+          <div class="result-field-val" id="res-package">—</div>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="action-btn primary" onclick="addToMedications()">
+          <span class="material-symbols-outlined">add_circle</span> Add to My Medications
+        </button>
+        <button class="action-btn ghost" onclick="scanAgain()">
+          <span class="material-symbols-outlined">refresh</span> Scan Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">
+  <span class="material-symbols-outlined" id="toast-icon">check_circle</span>
+  <span id="toast-msg"></span>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5rbhwAh4aFVKAUNGf63fPsZafhZBXeTA",
@@ -78,78 +448,291 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+let lastResult = null;
+let cameraActive = false;
 
 setPersistence(auth, browserLocalPersistence).then(() => {
-    onAuthStateChanged(auth, user => {
-        if(!user){ window.location="index.html"; return; }
-        document.getElementById("userEmail").textContent = user.displayName || user.email;
-    });
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location = "continue.html"; return; }
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.displayName || user.email;
+  });
 });
 
-function logout(){ signOut(auth).then(()=>{ window.location="index.html"; }); }
-window.logout = logout;
+// ─── TAB SWITCHING ───────────────────────────────────────────────
+window.switchTab = function(tab) {
+  ["camera","upload","manual"].forEach(t => {
+    document.getElementById("panel-"+t).classList.remove("active");
+    document.getElementById("tab-"+t).classList.remove("active");
+  });
+  document.getElementById("panel-"+tab).classList.add("active");
+  document.getElementById("tab-"+tab).classList.add("active");
+  hideResult();
+  if (tab !== "camera" && cameraActive) stopCamera();
+};
 
-// ZXing setup
-const codeReader = new ZXing.BrowserMultiFormatReader();
-let scanning = false;
+// ─── CAMERA SCANNING (QuaggaJS) ──────────────────────────────────
+window.toggleCamera = function() {
+  if (cameraActive) stopCamera(); else startCamera();
+};
 
-document.getElementById("startScan").addEventListener("click", async ()=>{
-    if(scanning) return;
-    scanning = true;
-    const videoElem = document.getElementById("scanner");
-    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-    const selectedDeviceId = devices[0]?.deviceId || null;
+window.startCamera = function() {
+  const viewport = document.getElementById("quagga-viewport");
+  const idle = document.getElementById("cam-idle");
+  const overlay = document.getElementById("scan-overlay");
+  const dot = document.getElementById("cam-dot");
+  const statusText = document.getElementById("cam-status-text");
+  const btn = document.getElementById("cam-toggle-btn");
 
-    codeReader.decodeFromVideoDevice(selectedDeviceId, videoElem, (result, err) => {
-        if(result){
-            codeReader.reset(); // stop scanning immediately
-            scanning = false;
-            fetchMedicationInfo(result.text);
-        }
-    });
-});
+  viewport.style.display = "block";
+  idle.style.display = "none";
+  overlay.style.display = "flex";
+  dot.className = "status-dot scanning";
+  statusText.textContent = "Scanning for barcode…";
+  btn.innerHTML = '<span class="material-symbols-outlined">stop_circle</span> Stop Camera';
+  document.getElementById("cam-manual-trigger").style.display = "flex";
 
-// Upload image scan
-document.getElementById("uploadImage").addEventListener("change", async (event)=>{
-    const file = event.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = async function(e){
-        try{
-            const result = await codeReader.decodeFromImageUrl(e.target.result);
-            fetchMedicationInfo(result.text);
-        }catch{
-            alert("Barcode not detected in image");
-        }
-    };
-    reader.readAsDataURL(file);
-});
-
-async function fetchMedicationInfo(barcode){
-    const resultsDiv = document.getElementById("results");
-    resultsDiv.style.display="block";
-    document.getElementById("brandName").textContent = "Loading...";
-    document.getElementById("genericName").textContent = "-";
-    document.getElementById("dosageForm").textContent = "-";
-    document.getElementById("manufacturer").textContent = "-";
-
-    try{
-        const res = await fetch(`https://api.fda.gov/drug/ndc.json?search=product_ndc:"${barcode}"&limit=1`);
-        const data = await res.json();
-        if(data.results && data.results.length>0){
-            const med = data.results[0];
-            document.getElementById("brandName").textContent = med.brand_name || "-";
-            document.getElementById("genericName").textContent = med.generic_name || "-";
-            document.getElementById("dosageForm").textContent = med.dosage_form || "-";
-            document.getElementById("manufacturer").textContent = med.labeler_name || "-";
-        } else {
-            document.getElementById("brandName").textContent = "Not found";
-        }
-    } catch(e){
-        console.error(e);
-        document.getElementById("brandName").textContent = "Error fetching data";
+  Quagga.init({
+    inputStream: {
+      type: "LiveStream",
+      target: viewport,
+      constraints: { facingMode: "environment", width: 640, height: 480 }
+    },
+    decoder: {
+      readers: ["upc_reader","upc_e_reader","ean_reader","ean_8_reader","code_128_reader","code_39_reader"]
+    },
+    locate: true,
+    numOfWorkers: 2,
+    frequency: 5
+  }, err => {
+    if (err) {
+      showToast("Camera access denied. Try uploading an image instead.", "error");
+      stopCamera();
+      return;
     }
+    Quagga.start();
+    cameraActive = true;
+  });
+
+  Quagga.onDetected(result => {
+    const code = result.codeResult.code;
+    if (code) {
+      stopCamera();
+      document.getElementById("ndc-input").value = code;
+      statusText.textContent = `Detected: ${code}`;
+      dot.className = "status-dot active";
+      showToast("Barcode detected!", "success");
+      lookupNDCCode(code);
+    }
+  });
+};
+
+window.stopCamera = function() {
+  try { Quagga.stop(); } catch(e) {}
+  cameraActive = false;
+  const viewport = document.getElementById("quagga-viewport");
+  const idle = document.getElementById("cam-idle");
+  const overlay = document.getElementById("scan-overlay");
+  const dot = document.getElementById("cam-dot");
+  document.getElementById("cam-status-text").textContent = "Camera stopped";
+  document.getElementById("cam-toggle-btn").innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Start Camera';
+  viewport.style.display = "none";
+  idle.style.display = "flex";
+  overlay.style.display = "none";
+  dot.className = "status-dot";
+};
+
+// ─── UPLOAD SCANNING ─────────────────────────────────────────────
+window.handleFileSelect = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("preview-img").src = e.target.result;
+    document.getElementById("preview-name").textContent = file.name;
+    document.getElementById("preview-wrap").style.display = "block";
+    document.getElementById("upload-zone").style.display = "none";
+    document.getElementById("scan-upload-btn").disabled = false;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.clearUpload = function() {
+  document.getElementById("file-input").value = "";
+  document.getElementById("preview-wrap").style.display = "none";
+  document.getElementById("upload-zone").style.display = "block";
+  document.getElementById("scan-upload-btn").disabled = true;
+  hideResult();
+};
+
+window.scanUploadedImage = function() {
+  const imgEl = document.getElementById("preview-img");
+  Quagga.decodeSingle({
+    decoder: { readers: ["upc_reader","upc_e_reader","ean_reader","ean_8_reader","code_128_reader","code_39_reader"] },
+    locate: true,
+    src: imgEl.src
+  }, result => {
+    if (result && result.codeResult) {
+      const code = result.codeResult.code;
+      showToast("Barcode detected: " + code, "success");
+      lookupNDCCode(code);
+    } else {
+      showError("Could not detect a barcode in this image.", "Try a clearer photo with good lighting, or enter the NDC code manually.");
+    }
+  });
+};
+
+// ─── NDC LOOKUP ──────────────────────────────────────────────────
+window.lookupNDC = function() {
+  const raw = document.getElementById("ndc-input").value.trim();
+  if (!raw) { showToast("Please enter an NDC code.", "error"); return; }
+  lookupNDCCode(raw);
+};
+
+window.lookupNDCCode = async function(raw) {
+  hideResult();
+  showLoading(true);
+
+  const clean = raw.replace(/[^0-9]/g, "");
+
+  // Try multiple query strategies
+  const queries = [
+    `product_ndc:"${raw}"`,
+    `product_ndc:"${clean}"`,
+    `package_ndc:"${raw}"`,
+    `package_ndc:"${clean}"`,
+  ];
+
+  let found = null;
+  for (const q of queries) {
+    try {
+      const url = `https://api.fda.gov/drug/ndc.json?search=${encodeURIComponent(q)}&limit=1`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length > 0) { found = data.results[0]; break; }
+      }
+    } catch(e) {}
+  }
+
+  showLoading(false);
+
+  if (!found) {
+    showError("No medication found for that code.", "Check that the NDC is correct. Some newer or generic products may not be in the OpenFDA database.");
+    return;
+  }
+
+  displayResult(found, raw);
+};
+
+function displayResult(d, rawCode) {
+  lastResult = d;
+
+  const val = (v, arr) => {
+    const source = arr ? d[arr] : d;
+    if (!source) return null;
+    const x = arr ? source : v;
+    if (typeof x === "string") return x || null;
+    if (Array.isArray(x)) return x[0] || null;
+    return null;
+  };
+
+  const brand = (d.brand_name || "").trim();
+  const generic = (d.generic_name || "").trim();
+  document.getElementById("res-brand").textContent = brand || generic || "Unknown Medication";
+  document.getElementById("res-generic").textContent = generic && generic !== brand ? generic : (d.product_type || "");
+  document.getElementById("res-ndc").textContent = d.product_ndc || rawCode;
+
+  const setField = (id, v) => {
+    const el = document.getElementById(id);
+    if (v) { el.textContent = v; el.className = "result-field-val"; }
+    else { el.textContent = "Not available"; el.className = "result-field-val missing"; }
+  };
+
+  setField("res-form",     d.dosage_form);
+  setField("res-route",    Array.isArray(d.route) ? d.route.join(", ") : d.route);
+  setField("res-mfr",      d.labeler_name || d.manufacturer_name);
+  setField("res-type",     d.product_type);
+
+  const strength = d.active_ingredients
+    ? d.active_ingredients.map(i => `${i.name} ${i.strength}`).join(", ")
+    : null;
+  setField("res-strength", strength);
+
+  const pkg = d.packaging ? d.packaging[0]?.description : null;
+  setField("res-package", pkg);
+
+  document.getElementById("result-card").style.display = "block";
+  document.getElementById("result-card").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
+
+// ─── ADD TO MEDICATIONS ──────────────────────────────────────────
+window.addToMedications = async function() {
+  if (!lastResult || !currentUser) return;
+  const brand = lastResult.brand_name || lastResult.generic_name || "Unknown";
+  const generic = lastResult.generic_name || "";
+  const form = lastResult.dosage_form || "";
+  const strength = lastResult.active_ingredients
+    ? lastResult.active_ingredients.map(i => `${i.name} ${i.strength}`).join(", ")
+    : "";
+
+  // Build URL params to pre-fill the new medication form
+  const params = new URLSearchParams({
+    name: brand,
+    generic: generic,
+    form: form,
+    strength: strength,
+    ndc: lastResult.product_ndc || ""
+  });
+  window.location = "new_medication.html?" + params.toString();
+};
+
+window.scanAgain = function() {
+  hideResult();
+  document.getElementById("ndc-input").value = "";
+};
+
+// ─── UI HELPERS ──────────────────────────────────────────────────
+function showLoading(show) {
+  document.getElementById("loading-wrap").style.display = show ? "flex" : "none";
+}
+function hideResult() {
+  document.getElementById("result-card").style.display = "none";
+  document.getElementById("error-wrap").style.display = "none";
+  document.getElementById("loading-wrap").style.display = "none";
+}
+function showError(title, sub) {
+  document.getElementById("error-title").textContent = title;
+  document.getElementById("error-sub").textContent = sub;
+  document.getElementById("error-wrap").style.display = "flex";
+}
+
+window.showToast = function(msg, type = "success") {
+  const toast = document.getElementById("toast");
+  const icon = document.getElementById("toast-icon");
+  document.getElementById("toast-msg").textContent = msg;
+  icon.textContent = type === "success" ? "check_circle" : "error";
+  toast.className = "toast " + type;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+};
+
+// Drag-over styling
+const zone = document.getElementById("upload-zone");
+zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+zone.addEventListener("drop", e => {
+  e.preventDefault(); zone.classList.remove("drag-over");
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) {
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById("file-input").files = dt.files;
+    handleFileSelect(document.getElementById("file-input"));
+  }
+});
+
 </script>
 </body>
 </html>
