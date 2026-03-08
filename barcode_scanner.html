@@ -799,26 +799,17 @@ async function tryRxNormDrugs(raw) {
 // Docs: https://dailymed.nlm.nih.gov/dailymed/app-support-web-services.cfm
 // Accepts 10-digit NDC with hyphens. Returns drug title + manufacturer from label.
 async function tryDailyMed(raw) {
-  const candidates = ndcVariants(raw).filter(v => v.includes("-") || /^\d{10,11}$/.test(v));
-  for (const ndc of candidates) {
-    try {
-      const r = await fetch(`${DAILYMED}/spls.json?ndc=${encodeURIComponent(ndc)}&pagesize=1`);
-      if (!r.ok) continue;
-      const j = await r.json();
-      const spl = j?.data?.[0];
-      if (!spl?.title) continue;
-      // DailyMed title format: "DRUG NAME (ingredient) FORM [MANUFACTURER]"
-      const title = spl.title;
-      const brandMatch   = title.match(/^([^([\n]+)/);
-      const mfrMatch     = title.match(/\[([^\]]+)\]$/);
-      const genericMatch = title.match(/\(([^)]+)\)/);
-      const brand   = brandMatch?.[1]?.trim() || title;
-      const mfr     = mfrMatch?.[1]?.trim()   || null;
-      const generic = genericMatch?.[1]?.trim()|| "";
-      return mkResult("DailyMed (NIH)", brand, generic, null, ndc, title, mfr);
-    } catch(e) {}
-  }
-  return null;
+  try {
+    const r = await fetch(`https://api.mypills.kidslearninglab.com/get_daily_med?barcode=${encodeURIComponent(raw)}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j?.status !== "found" || !j.name) return null;
+    const title = j.name;
+    const brand   = title.match(/^([^([\n]+)/)?.[1]?.trim() || title;
+    const mfr     = title.match(/\[([^\]]+)\]$/)?.[1]?.trim() || null;
+    const generic = title.match(/\(([^)]+)\)/)?.[1]?.trim() || "";
+    return mkResult("DailyMed (NIH)", brand, generic, null, j.ndc || raw, title, mfr);
+  } catch(e) { return null; }
 }
 
 // ── SOURCE 6: OpenFDA /drug/ndc.json (NDC Directory)
